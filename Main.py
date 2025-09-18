@@ -2,6 +2,7 @@ import tkinter as tk
 from Welcome_Screen import WelcomeScreen
 from Home_Page import HomePage
 from Selected import SelectedScreen
+from OrderCode_Screen import OrderCodeScreen
 
 class MovieKiosk(tk.Tk):
     def __init__(self):
@@ -21,7 +22,7 @@ class MovieKiosk(tk.Tk):
         self.frames = {}
 
         # Loop through all pages
-        for F in (WelcomeScreen, HomePage, SelectedScreen):
+        for F in (WelcomeScreen, HomePage, SelectedScreen, OrderCodeScreen):
             frame = F(parent=self.container, controller=self)
             self.frames[F.__name__] = frame
 
