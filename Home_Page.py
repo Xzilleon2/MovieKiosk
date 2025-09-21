@@ -1,6 +1,5 @@
 import os
 import tkinter as tk
-from idlelib.configdialog import font_sample_text
 from tkinter import PhotoImage
 
 class HomePage(tk.Frame):
