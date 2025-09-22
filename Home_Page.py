@@ -1,6 +1,7 @@
 import os
 import tkinter as tk
 from tkinter import PhotoImage
+from Modals.Admin import admin_login_modal
 
 class HomePage(tk.Frame):
     def __init__(self, parent, controller):
@@ -86,7 +87,8 @@ class HomePage(tk.Frame):
             width=36,
             image=self.iconIMG,
             bg="#CD4126",
-            activebackground="#C65D49"
+            activebackground="#C65D49",
+            command=lambda: admin_login_modal(self, controller)
         )
         icon.pack(side=tk.LEFT, anchor="s")
 
