@@ -13,14 +13,14 @@ class AdminPage(tk.Frame):
         self.rowconfigure(0, weight=1)
 
         # Side frame for column 1 ============================================================
-        sideMenu = tk.Frame(self, bg="#F4F4F4")
-        sideMenu.grid(row=0, column=0, sticky="nsew")
-        sideMenu.rowconfigure(0, weight=1)
-        sideMenu.columnconfigure(0, weight=1)
+        #sideMenu = tk.Frame(self, bg="#F4F4F4")
+        #sideMenu.grid(row=0, column=0, sticky="nsew")
+        #sideMenu.rowconfigure(0, weight=1)
+        #sideMenu.columnconfigure(0, weight=1)
 
         #Frame Content for side Menu
-        sideMenuCon = tk.Frame(sideMenu, bg="#FFFFFF", relief="groove")
-        sideMenuCon.grid(row=0, column=0, sticky="nsew", padx=(25, 5), pady=55)
+        sideMenuCon = tk.Frame(self, bg="#FFFFFF", relief="groove")
+        sideMenuCon.grid(row=0, column=0, sticky="nsew")
         sideMenuCon.columnconfigure(0, weight=1)
 
         #Image path
@@ -51,21 +51,22 @@ class AdminPage(tk.Frame):
         # Main frame for tables ============================================================
         mainMenu = tk.Frame(self, bg="#F4F4F4")
         mainMenu.grid(row=0, column=1, sticky="nsew")
-        mainMenu.rowconfigure(0, weight=1)
+        mainMenu.rowconfigure(0, weight=0)
+        mainMenu.rowconfigure(1, weight=1)
         mainMenu.columnconfigure(0, weight=1)
 
         # Frame container for tables
         mainMenuCon = tk.Frame(mainMenu, bg="#FFFFFF", relief="groove")
-        mainMenuCon.grid(row=0, column=0, sticky="nsew", padx=(5, 25), pady=55)
+        mainMenuCon.grid(row=1, column=0, sticky="nsew", padx=(25, 25), pady=(0,55))
         mainMenuCon.rowconfigure(0, weight=0)
         mainMenuCon.rowconfigure(1, weight=1)
         mainMenuCon.rowconfigure(2, weight=0)
         mainMenuCon.columnconfigure(0, weight=1)
 
         # Title Row =====================================================================
-        Title = tk.Label(mainMenuCon, bg="#FFFFFF", text="MOVIE TICKETING ADMIN",
-                         font=("Book Antiqua", 30), fg="#665050", anchor="w")
-        Title.grid(row=0, column=0, sticky="nsew", ipady=30, padx=20)
+        Title = tk.Label(mainMenu, bg="#F4F4F4", text="MOVIES TABLE",
+                         font=("Book Antiqua", 30), fg="#665050", anchor="sw")
+        Title.grid(row=0, column=0, sticky="nsew", padx=20, pady=(50,10))
 
         # Container for Table =====================================================================
         tableCon = tk.Frame(mainMenuCon, bg="#FFFFFF")
@@ -102,9 +103,9 @@ class AdminPage(tk.Frame):
         for i in range(15):
             table.insert(parent='', index=0, values=content)
 
-        # --- Search Bar ---
+        # --- Search Bar --------------------------------------------------------------------------
         searchCon = tk.Frame(mainMenuCon, bg="#FFFFFF")
-        searchCon.grid(row=0, column=0, sticky="se", padx=15, pady=5)
+        searchCon.grid(row=0, column=0, sticky="se", padx=15, pady=(15,5))
 
         tk.Label(searchCon, text="Search:", font=("Book Antiqua", 12), bg="#FFFFFF").pack(side="left")
         search_entry = tk.Entry(searchCon, font=("Book Antiqua", 12))
@@ -153,7 +154,7 @@ class AdminPage(tk.Frame):
 
         # Container for Buttons ================================================================
         conBtn = tk.Frame(mainMenuCon, bg="#FFFFFF")
-        conBtn.grid(row=2, column=0, sticky="nsew", ipady=50)
+        conBtn.grid(row=2, column=0, sticky="nsew", ipady=10)
 
         # Register Movie Button
         registerBtn = tk.Button(conBtn, bg="#CD4126", text="Register",
