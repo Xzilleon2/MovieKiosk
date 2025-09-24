@@ -4,14 +4,14 @@ import os
 from Modals.Register import register_modal
 from Styles.Table import setup_table_style, zebra_striping, sort_table, disable_resize
 
-class AdminPage(tk.Frame):
+class SalesHistoryPage(tk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent, bg="#F4F4F4")
 
         # Apply global Table styles
         setup_table_style()
 
-        #Main layout for admin page
+        #Main layout for sales page
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=9)
         self.rowconfigure(0, weight=1)
@@ -34,8 +34,9 @@ class AdminPage(tk.Frame):
                                font=("Book Antiqua", 12), fg="#665050")
         tablesLabel.grid(row=1, column=0, sticky="nsw", ipady=15, ipadx=10)
 
-        movieBtn = tk.Button(sideMenuCon, bg="#EFE9E0", text="Movies",
-                             font=("Book Antiqua", 12), fg="#665050", relief="flat")
+        movieBtn = tk.Button(sideMenuCon, bg="#FFFFFF", text="Movies",
+                             font=("Book Antiqua", 12), fg="#665050", relief="flat",
+                             command=lambda: controller.show_frame("AdminPage"))
         movieBtn.grid(row=2, column=0, sticky="nsew", ipady=10)
 
         salesBtn = tk.Button(sideMenuCon, bg="#FFFFFF", text="Sales",
@@ -43,9 +44,8 @@ class AdminPage(tk.Frame):
                              command=lambda: controller.show_frame("SalesPage"))
         salesBtn.grid(row=3, column=0, sticky="nsew", ipady=10)
 
-        salesHistoryBtn = tk.Button(sideMenuCon, bg="#FFFFFF", text="Sales History",
-                                    font=("Book Antiqua", 12), fg="#665050", relief="flat",
-                                    command=lambda: controller.show_frame("SalesHistoryPage"))
+        salesHistoryBtn = tk.Button(sideMenuCon, bg="#EFE9E0", text="Sales History",
+                                    font=("Book Antiqua", 12), fg="#665050", relief="flat")
         salesHistoryBtn.grid(row=4, column=0, sticky="nsew", ipady=10)
 
         optionsLabel = tk.Label(sideMenuCon, bg="#FFFFFF", text="OPTION",
@@ -73,12 +73,12 @@ class AdminPage(tk.Frame):
         mainMenuCon.columnconfigure(0, weight=1)
 
         # Title Row =====================================================================
-        Title = tk.Label(mainMenuCon, bg="#FFFFFF", text="MOVIES TABLE",
+        Title = tk.Label(mainMenuCon, bg="#FFFFFF", text="SALES HISTORY TABLE",
                          font=("Book Antiqua", 18), fg="#665050", anchor="sw")
         Title.grid(row=0, column=0, sticky="nsew", padx= 25, ipady=15)
         Title.columnconfigure(0, weight=1)
 
-        subTitle = tk.Label(mainMenuCon, bg="#FFFFFF", text="Display movie information.",
+        subTitle = tk.Label(mainMenuCon, bg="#FFFFFF", text="Display History of payments and movies.",
                             font=("Book Antiqua", 12), fg="#665050", anchor="nw")
         subTitle.grid(row=1, column=0, sticky="nsew", padx= 25)
 
@@ -89,20 +89,20 @@ class AdminPage(tk.Frame):
         # --- Table ---
         table = ttk.Treeview(
             tableCon,
-            columns=('ID', 'TITLE', 'Description', 'Price', 'Genre', 'Date'),
+            columns=('ID', 'CODE', 'Seat', 'Price', 'Genre', 'Date'),
             show='headings',
             style="Custom.Treeview"
         )
 
-        for col in ('ID', 'TITLE', 'Description', 'Price', 'Genre', 'Date'):
+        for col in ('ID', 'CODE', 'Seat', 'Price', 'Genre', 'Date'):
             table.heading(col, text=col, anchor='center')
 
         table.pack(expand=True, fill="both", padx=20)
 
         # Column alignment
         table.column('ID', anchor='e', width=80)
-        table.column('TITLE', anchor='w', width=200)
-        table.column('Description', anchor='w', width=300, stretch=False)
+        table.column('CODE', anchor='w', width=200)
+        table.column('Seat', anchor='w', width=300, stretch=False)
         table.column('Price', anchor='e', width=100)
         table.column('Genre', anchor='w', width=150)
         table.column('Date', anchor='w', width=150)
@@ -139,7 +139,7 @@ class AdminPage(tk.Frame):
         # Keep reference of data
         self.all_data = [content for i in range(15)]  # sample dataset
 
-        # Function to update table
+        # Function to update table ----------------------------------------------------------------------
         def update_table(data):
             table.delete(*table.get_children())  # clear
             for row in data:
@@ -154,7 +154,6 @@ class AdminPage(tk.Frame):
             update_table(filtered)
 
         tk.Button(searchCon, text="Go", command=search, font=("Book Antiqua", 10)).pack(side="left", padx=5)
-
 
         # Register Movie Button ==================================================================
         registerBtn = tk.Button(conBtn, bg="#CD4126", text="Register",
