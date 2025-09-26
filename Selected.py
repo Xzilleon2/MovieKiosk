@@ -44,7 +44,7 @@ class SelectedScreen(tk.Frame):
             self,
             bg="#F4F4F4",
         )
-        mainFrame.grid(row=1, column=0, sticky="nsew",)
+        mainFrame.grid(row=1, column=0, sticky="nsew", padx=(20,0))
         mainFrame.columnconfigure(0, weight=1) # responsive column 1
         mainFrame.columnconfigure(1, weight=2)  # responsive column 2
         mainFrame.rowconfigure(0, weight=1) # responsive row
