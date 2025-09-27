@@ -1,92 +1,62 @@
-import tkinter as tk
+import customtkinter as ctk
 import os
-from PIL import Image, ImageTk
+from PIL import Image
 
-class SelectedScreen(tk.Frame):
+class SelectedScreen(ctk.CTkFrame):
     def __init__(self, parent, controller):
-        super().__init__(parent, bg="#F4F4F4")
+        super().__init__(parent, fg_color="#F4F4F4")
 
         self.controller = controller
-        self.columnconfigure(0, weight=1) # responsive column
-        self.columnconfigure(1, weight=0)  # responsive column
-        self.rowconfigure(0, weight=0) # responsive row 1
-        self.rowconfigure(1, weight=2) # responsive row 2
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=0)
+        self.rowconfigure(0, weight=0)
+        self.rowconfigure(1, weight=2)
 
-        #upper Frame ==============================================================
-        upperFrame = tk.Frame(
-            self,
-            bg="#F4F4F4",
-        )
-        upperFrame.grid(row=0, column=0, sticky="nsew",)
+        # ========== UPPER FRAME ==========
+        upperFrame = ctk.CTkFrame(self, fg_color="#F4F4F4")
+        upperFrame.grid(row=0, column=0, sticky="nsew")
         upperFrame.columnconfigure(0, weight=1)
-        upperFrame.rowconfigure(0, weight=1)
 
-        buttonCon = tk.Frame(
+        backButton = ctk.CTkButton(
             upperFrame,
-            bg="#F4F4F4",
-        )
-        buttonCon.grid(row=0, column=0, sticky="sw", padx=15)
-
-        backButton = tk.Button(
-            buttonCon,
             text="← BACK TO MENU",
             font=("Book Antiqua", 20),
-            fg="#665050",
-            bg="#F4F4F4",
-            relief="flat",
-            anchor="center",
+            text_color="#665050",
+            fg_color="#F4F4F4",
+            hover_color="#DDD",
+            corner_radius=0,
             command=lambda: controller.show_frame("HomePage")
         )
-        backButton.grid(row=0, column=0, sticky="sw", pady=30)
+        backButton.grid(row=0, column=0, sticky="sw", padx=15, pady=30)
 
-        # Main Content ===============================================================
-        mainFrame = tk.Frame(
-            self,
-            bg="#F4F4F4",
-        )
+        # ========== MAIN FRAME ==========
+        mainFrame = ctk.CTkFrame(self, fg_color="#F4F4F4")
         mainFrame.grid(row=1, column=0, sticky="nsew", padx=(20,0))
-        mainFrame.columnconfigure(0, weight=1) # responsive column 1
-        mainFrame.columnconfigure(1, weight=2)  # responsive column 2
-        mainFrame.rowconfigure(0, weight=1) # responsive row
+        mainFrame.columnconfigure(0, weight=1)
+        mainFrame.columnconfigure(1, weight=2)
 
-        # Selected Image ===============================================================
+        # Poster Image
         imgpath = os.path.join(os.path.dirname(__file__), "Assets", "PetSematary.png")
-        img = Image.open(imgpath)
-        img = img.resize((400, 600), Image.LANCZOS)
-        self.img = ImageTk.PhotoImage(img)
+        img = Image.open(imgpath).resize((400, 600), Image.LANCZOS)
+        self.img = ctk.CTkImage(light_image=img, dark_image=img, size=(400, 600))
 
-        imgLabel = tk.Label(
-            mainFrame,
-            image=self.img,
-            bg="#F4F4F4",
-        )
+        imgLabel = ctk.CTkLabel(mainFrame, image=self.img, text="")
         imgLabel.grid(row=0, column=0, sticky="nsew")
 
-        #Info Frame ===============================================================
-        infoFrame = tk.Frame(
-            mainFrame,
-            bg="#F4F4F4",
-        )
-        infoFrame.grid(row=0, column=1, sticky="nsew")
-        infoFrame.rowconfigure(0, weight=0) # responsive title
-        infoFrame.rowconfigure(1, weight=0) # responsive description
-        infoFrame.rowconfigure(2, weight=0) # responsive Seat Frame
-        infoFrame.rowconfigure(3, weight=0) # responsive time Frame
-        infoFrame.rowconfigure(4, weight=0) # responsive Price Frame
-        infoFrame.rowconfigure(5, weight=0) # responsive button Frame
-        infoFrame.columnconfigure(0, weight=1) # responsive column
+        # Info Frame
+        infoFrame = ctk.CTkFrame(mainFrame, fg_color="#F4F4F4")
+        infoFrame.grid(row=0, column=1, sticky="nsew", padx=10)
+        infoFrame.columnconfigure(0, weight=1)
 
-        titleLabel = tk.Label(
+        ctk.CTkLabel(
             infoFrame,
             text="Pet Sematary",
             font=("Book Antiqua", 40),
-            fg="#665050",
-            bg="#F4F4F4",
+            text_color="#665050",
             anchor="w"
-        )
-        titleLabel.grid(row=0, column=0, sticky="new", pady=(70,0))
+        ).grid(row=0, column=0, sticky="new")
 
-        descriptionLabel = tk.Label(
+        ctk.CTkLabel(
             infoFrame,
             text=(
                 "Richard, an archaeologist and professor, and his wife, Jules, "
@@ -94,272 +64,226 @@ class SelectedScreen(tk.Frame):
                 "Owen, an asthmatic child, tells his mother...."
             ),
             font=("Book Antiqua", 12),
-            fg="#665050",
-            bg="#F4F4F4",
+            text_color="#665050",
             anchor="nw",
-            justify="left",  # text alignment
-            wraplength=700  # max width in pixels before wrapping
-        )
-        descriptionLabel.grid(row=1, column=0, sticky="new")
+            justify="left",
+            wraplength=500
+        ).grid(row=1, column=0, sticky="new")
 
-        # Seat Frame ============================================================
-        seatFrame = tk.Frame(
-            infoFrame,
-            bg="#F4F4F4",
-        )
+        # ========== SEATS ==========
+        seatFrame = ctk.CTkFrame(infoFrame, fg_color="#F4F4F4")
         seatFrame.grid(row=2, column=0, sticky="nsew", pady=(20,0))
-        seatFrame.rowconfigure(0, weight=1)
-        seatFrame.rowconfigure(1, weight=2)
-        seatFrame.columnconfigure(0, weight=1)
 
-        seatLabel = tk.Label(
+        ctk.CTkLabel(
             seatFrame,
             text="AVAILABLE SEATS",
             font=("Book Antiqua", 12),
-            bg="#F4F4F4",
-            fg="#998F8F",
-            anchor="w",
-        )
-        seatLabel.grid(row=0, column=0, sticky="nsew", padx=(0,30))
+            text_color="#998F8F",
+            anchor="w"
+        ).pack(anchor="w", padx=(0,30))
 
-        seatFrameCon = tk.Frame(
-            seatFrame,
-            bg="#F4F4F4",
-        )
-        seatFrameCon.grid(row=1, column=0, sticky="nsew")
+        seatFrameCon = ctk.CTkFrame(seatFrame, fg_color="#F4F4F4")
+        seatFrameCon.pack(anchor="w")
 
-        seatButton1 = tk.Button(
-            seatFrameCon,
-            text="A1",
-            font=("Book Antiqua", 14),
-            fg="#665050",
-            bg="#EFE9E0",
-            relief=tk.GROOVE,
-        )
-        seatButton1.pack(side=tk.LEFT, anchor=tk.N, padx=(0,10))
+        self.seat_buttons = []
+        max_per_row = 10  # number of seats
 
-        seatButton2 = tk.Button(
-            seatFrameCon,
-            text="A2",
-            font=("Book Antiqua", 14),
-            fg="#665050",
-            bg="#EFE9E0",
-            relief=tk.GROOVE,
-        )
-        seatButton2.pack(side=tk.LEFT, anchor=tk.N, padx=(0,10))
+        for i, seat in enumerate([
+            "A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10",
+            "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10",
+        ]):
+            row = i // max_per_row
+            col = i % max_per_row
 
-        # Time Frame ============================================================
-        timeFrame = tk.Frame(
-            infoFrame,
-            bg="#F4F4F4",
-        )
-        timeFrame.grid(row=3, column=0, sticky="nsew",)
-        timeFrame.rowconfigure(0, weight=1)
-        timeFrame.rowconfigure(1, weight=1)
-        timeFrame.columnconfigure(0, weight=1)
+            btn = ctk.CTkButton(
+                seatFrameCon,
+                text=seat,
+                font=("Book Antiqua", 14),
+                text_color="#665050",
+                fg_color="#EFE9E0",
+                hover_color="#DDD",
+                corner_radius=5,
+                width=60,
+                command=lambda b=seat: self.select_option(b, "seat")
+            )
+            btn.grid(row=row, column=col, padx=5, pady=5, sticky="w")
 
-        timeLabel = tk.Label(
+            self.seat_buttons.append(btn)
+
+        # ========== TIME ==========
+        timeFrame = ctk.CTkFrame(infoFrame, fg_color="#F4F4F4")
+        timeFrame.grid(row=3, column=0, sticky="nsew", pady=(20,0))
+
+        ctk.CTkLabel(
             timeFrame,
             text="TIME",
             font=("Book Antiqua", 12),
-            bg="#F4F4F4",
-            fg="#998F8F",
-            anchor="sw",
-        )
-        timeLabel.grid(row=0, column=0, sticky="nsew", padx=(0,30), pady=10)
+            text_color="#998F8F",
+            anchor="w"
+        ).pack(anchor="w", padx=(0,30))
 
-        timeFrameCon = tk.Frame(
-            timeFrame,
-            bg="#F4F4F4",
-        )
-        timeFrameCon.grid(row=1, column=0, sticky="nsew")
+        timeFrameCon = ctk.CTkFrame(timeFrame, fg_color="#F4F4F4")
+        timeFrameCon.pack(anchor="w")
 
-        timeButton1 = tk.Button(
-            timeFrameCon,
-            text="1:00 - 2:00",
-            font=("Book Antiqua", 14),
-            fg="#665050",
-            bg="#EFE9E0",
-            relief=tk.GROOVE,
-        )
-        timeButton1.pack(side=tk.LEFT, anchor=tk.N, padx=(0,10))
+        self.time_buttons = []
+        max_per_row = 2
 
-        timeButton2 = tk.Button(
-            timeFrameCon,
-            text="2:00 - 3:00",
-            font=("Book Antiqua", 14),
-            fg="#665050",
-            bg="#EFE9E0",
-            relief=tk.GROOVE,
-        )
-        timeButton2.pack(side=tk.LEFT, anchor=tk.N, padx=(0,10))
+        for i, t in enumerate(["1:00 - 2:00", "2:00 - 3:00", "3:00 - 4:00", "4:00 - 5:00"]):
+            row = i // max_per_row
+            col = i % max_per_row
 
-        # Gate Frame ============================================================
-        gateFrame = tk.Frame(
-            infoFrame,
-            bg="#F4F4F4",
-        )
-        gateFrame.grid(row=4, column=0, sticky="nsew",)
-        gateFrame.rowconfigure(0, weight=1)
-        gateFrame.rowconfigure(1, weight=1)
-        gateFrame.columnconfigure(0, weight=1)
+            btn = ctk.CTkButton(
+                timeFrameCon,
+                text=t,
+                font=("Book Antiqua", 14),
+                text_color="#665050",
+                fg_color="#EFE9E0",
+                hover_color="#DDD",
+                corner_radius=5,
+                width=120,
+                command=lambda b=t: self.select_option(b, "time")
+            )
+            btn.grid(row=row, column=col, padx=5, pady=5, sticky="w")
+            self.time_buttons.append(btn)
 
-        gateLabel = tk.Label(
+        # ========== GATE ==========
+        gateFrame = ctk.CTkFrame(infoFrame, fg_color="#F4F4F4")
+        gateFrame.grid(row=4, column=0, sticky="nsew", pady=(20, 0))
+
+        ctk.CTkLabel(
             gateFrame,
             text="GATE",
             font=("Book Antiqua", 12),
-            bg="#F4F4F4",
-            fg="#998F8F",
-            anchor="sw",
-        )
-        gateLabel.grid(row=0, column=0, sticky="nsew", padx=(0,30), pady=10)
+            text_color="#998F8F",
+            anchor="w"
+        ).pack(anchor="w", padx=(0, 30))
 
-        gateFrameCon = tk.Frame(
-            gateFrame,
-            bg="#F4F4F4",
-        )
-        gateFrameCon.grid(row=1, column=0, sticky="nsew")
+        gateFrameCon = ctk.CTkFrame(gateFrame, fg_color="#F4F4F4")
+        gateFrameCon.pack(anchor="w")
 
-        gateButton1 = tk.Button(
-            gateFrameCon,
-            text="Gate 1",
-            font=("Book Antiqua", 14),
-            fg="#665050",
-            bg="#EFE9E0",
-            relief=tk.GROOVE,
-        )
-        gateButton1.pack(side=tk.LEFT, anchor=tk.N, padx=(0,10))
+        self.gate_buttons = []
+        max_per_row = 2  # number of gates per row
 
-        gateButton2 = tk.Button(
-            gateFrameCon,
-            text="Gate 2",
-            font=("Book Antiqua", 14),
-            fg="#665050",
-            bg="#EFE9E0",
-            relief=tk.GROOVE,
-        )
-        gateButton2.pack(side=tk.LEFT, anchor=tk.N, padx=(0,10))
+        for i, g in enumerate(["Gate 1", "Gate 2", "Gate 3", "Gate 4"]):
+            row = i // max_per_row
+            col = i % max_per_row
 
-        # Price Frame ============================================================
-        priceCon = tk.Frame(
+            btn = ctk.CTkButton(
+                gateFrameCon,
+                text=g,
+                font=("Book Antiqua", 14),
+                text_color="#665050",
+                fg_color="#EFE9E0",
+                hover_color="#DDD",
+                corner_radius=5,
+                width=100,
+                command=lambda b=g: self.select_option(b, "gate")
+            )
+            btn.grid(row=row, column=col, padx=5, pady=5, sticky="w")
+            self.gate_buttons.append(btn)
+
+        # ========== PRICE ==========
+        ctk.CTkLabel(
             infoFrame,
-            bg="#F4F4F4",
-        )
-        priceCon.grid(row=5, column=0, sticky="nsew", pady=20)
-        priceCon.rowconfigure(0, weight=1)
-        priceCon.columnconfigure(0, weight=1)
-
-        priceLabel = tk.Label(
-            priceCon,
             text="$300",
             font=("Book Antiqua", 30),
-            fg="#665050",
-        )
-        priceLabel.pack(side=tk.LEFT, anchor=tk.N)
+            text_color="#665050"
+        ).grid(row=5, column=0, sticky="w", pady=20)
 
-        # Purchase Frame ============================================================
-        purchaseCon = tk.Frame(
+        # ========== PURCHASE BUTTON ==========
+        ctk.CTkButton(
             infoFrame,
-            bg="#F4F4F4",
-        )
-        purchaseCon.grid(row=6, column=0, sticky="nsew", pady=10)
-        purchaseCon.rowconfigure(0, weight=1)
-        purchaseCon.columnconfigure(0, weight=1)
-
-        purchaseBtn = tk.Button(
-            purchaseCon,
-            width= 20 ,
             text="Place Order",
             font=("Book Antiqua", 14),
-            fg="#FFFFFF",
-            bg="#CD4126",
+            text_color="#FFFFFF",
+            fg_color="#CD4126",
+            hover_color="#C65D49",
+            corner_radius=8,
+            width=200,
+            height=50,
             command=self.open_modal
-        )
-        purchaseBtn.pack(side=tk.LEFT, ipady=5)
+        ).grid(row=6, column=0, sticky="w", pady=10)
 
-        # Modal Frame for the order details =====================================================
-        self.orderFrame = tk.Frame(
+        # ========== ORDER MODAL ==========
+        self.orderFrame = ctk.CTkFrame(
             self,
-            bg="#FFFFFF",
+            fg_color="#FFFFFF",
             width=250,
-            bd=1,
-            relief=tk.RAISED,
+            corner_radius=10,
         )
-        self.orderFrame.grid(row=0, column=1, rowspan=2, sticky="ns")
-        self.orderFrame.columnconfigure(0, weight=1)
-        self.orderFrame.rowconfigure(0, weight=0)
-        self.orderFrame.rowconfigure(1, weight=1)
-        self.orderFrame.rowconfigure(2, weight=1)
-        self.orderFrame.rowconfigure(3, weight=0)
-        self.orderFrame.rowconfigure(4, weight=0)
-
-        # keep width fixed, allow height to expand
+        self.orderFrame.grid(row=0, column=1, rowspan=2, sticky="ns", padx=5)
         self.orderFrame.grid_propagate(False)
-        self.orderFrame.grid_remove()  # hide initially
+        self.orderFrame.grid_remove()
+
+        # Track selections
+        self.selected = {"seat": None, "time": None, "gate": None}
+
+    def select_option(self, value, group):
+        # reset group
+        button_list = {
+            "seat": self.seat_buttons,
+            "time": self.time_buttons,
+            "gate": self.gate_buttons
+        }[group]
+
+        for btn in button_list:
+            btn.configure(fg_color="#EFE9E0", text_color="#665050")
+
+        # highlight selected
+        for btn in button_list:
+            if btn.cget("text") == value:
+                btn.configure(fg_color="#CD4126", text_color="white")
+
+        # store value
+        self.selected[group] = value
 
     def open_modal(self):
-        # Show the orderFrame
-        self.orderFrame.grid()
+        # If modal is already visible → hide it
+        if self.orderFrame.winfo_ismapped():
+            self.orderFrame.grid_remove()
+            return
 
-        # Clear old contents
+        # Else → show modal
+        self.orderFrame.grid()
         for widget in self.orderFrame.winfo_children():
             widget.destroy()
 
-        # Fill with order info
-        tk.Label(
+        ctk.CTkLabel(
             self.orderFrame,
             text="Order Status",
             font=("Book Antiqua", 24),
-            bg="#FFFFFF",
-            fg="#665050",
-            anchor="nw",
-        ).grid(row=0, column=0, sticky="nsew", padx=10, pady=(25,0))
+            text_color="#665050",
+            anchor="nw"
+        ).pack(pady=(25,10), padx=10, anchor="w")
 
-        tk.Label(
+        ctk.CTkLabel(
             self.orderFrame,
-            text="Tickets added",
-            font=("Book Antiqua", 18),
-            bg="#FFFFFF",
-            fg="#665050",
-            anchor="nw",
-        ).grid(row=1, column=0, sticky="nsew", padx=(20,10), pady=(20,0))
-
-        # Loop the content Here for tickets
-        ticketFrame = tk.Frame(
-            self.orderFrame,
-            bg="#FFFFFF",
-        )
-        ticketFrame.grid(row=2, column=0, sticky="nsew", padx=(30,10), pady=(15,0))
-        ticketFrame.columnconfigure(0, weight=1)
-        ticketFrame.rowconfigure(0, weight=1)
-
-        # Frame for Checkout Btn
-        checkoutFrame = tk.Frame(
-            self.orderFrame,
-            bg="#FFFFFF",
-        )
-        checkoutFrame.grid(row=4, column=0, sticky="nsew", padx=(30,10), pady=(0,55))
-        checkoutFrame.columnconfigure(0, weight=1)
-        checkoutFrame.rowconfigure(0, weight=1)
-
-        checkoutLabel = tk.Label(
-            self.orderFrame,
-            text="Total:",
-            font=("Book Antiqua", 18),
-            fg="#665050",
-            bg="#FFFFFF",
+            text=f"Tickets added\nSeat: {self.selected['seat']}\nTime: {self.selected['time']}\nGate: {self.selected['gate']}",
+            font=("Book Antiqua", 16),
+            text_color="#665050",
             anchor="w",
-        )
-        checkoutLabel.grid(row=3, column=0, sticky="nsew", padx=(30,10), pady=(0,15))
+            justify="left"
+        ).pack(pady=(10,5), padx=20, anchor="w")
 
-        checkoutBtn = tk.Button(
-            checkoutFrame,
-            width= 10,
+        # Ticket placeholder
+        ctk.CTkFrame(self.orderFrame, fg_color="#F6F6F6", height=100).pack(fill="x", padx=20, pady=15)
+
+        # Total and Checkout
+        ctk.CTkLabel(
+            self.orderFrame,
+            text="Total: $300",
+            font=("Book Antiqua", 18),
+            text_color="#665050",
+            anchor="w"
+        ).pack(pady=(10,5), padx=20, anchor="w")
+
+        ctk.CTkButton(
+            self.orderFrame,
             text="Checkout",
             font=("Book Antiqua", 12),
-            fg="#FFFFFF",
-            bg="#CD4126",
+            text_color="#FFFFFF",
+            fg_color="#CD4126",
+            hover_color="#C65D49",
+            width=100,
             command=lambda: self.controller.show_frame("OrderCodeScreen")
-        )
-        checkoutBtn.pack(side=tk.LEFT)
-
+        ).pack(pady=20)

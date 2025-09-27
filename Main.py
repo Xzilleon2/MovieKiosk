@@ -1,4 +1,4 @@
-import tkinter as tk
+import customtkinter as ctk
 from Welcome_Screen import WelcomeScreen
 from Home_Page import HomePage
 from Selected import SelectedScreen
@@ -7,7 +7,8 @@ from Admin_Page import AdminPage
 from Sales_Page import SalesPage
 from SalesHistory_Page import SalesHistoryPage
 
-class MovieKiosk(tk.Tk):
+
+class MovieKiosk(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("Movie Kiosk")
@@ -15,7 +16,7 @@ class MovieKiosk(tk.Tk):
         self.bind("<Escape>", lambda e: self.destroy())  # Exit with ESC
 
         # Main container (fills whole screen)
-        self.container = tk.Frame(self, bg="black")
+        self.container = ctk.CTkFrame(self, fg_color="black")
         self.container.pack(fill="both", expand=True)
 
         # Make container grid expandable
@@ -43,5 +44,9 @@ class MovieKiosk(tk.Tk):
 
 
 if __name__ == "__main__":
+    # ✅ Set appearance & theme
+    ctk.set_appearance_mode("dark")
+    ctk.set_default_color_theme("blue")
+
     app = MovieKiosk()
     app.mainloop()

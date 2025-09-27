@@ -1,117 +1,95 @@
 import os
-import tkinter as tk
-from tkinter import PhotoImage
+import customtkinter as ctk
 from Modals.Admin import admin_login_modal
-from PIL import Image, ImageTk
+from PIL import Image
 
 
-class HomePage(tk.Frame):
+class HomePage(ctk.CTkFrame):
     def __init__(self, parent, controller):
-        super().__init__(parent, bg="#F4F4F4")
+        super().__init__(parent, fg_color="#F4F4F4")
         self.controller = controller
 
-        # Configure parent grid (2 columns, 1 row)
-        self.columnconfigure(0, weight=1)   # Left
-        self.columnconfigure(1, weight=8)   # Middle
-        self.rowconfigure(0, weight=1)      # Main row
+        # Configure parent grid
+        self.columnconfigure(0, weight=0)   # Left
+        self.columnconfigure(1, weight=8)
+        self.rowconfigure(0, weight=1)
+
+        # ====================== MIDDLE CONTAINER ======================
+        middleFrameCon = ctk.CTkFrame(self, fg_color="#F6F6F6")
+        middleFrameCon.grid(row=0, column=1, sticky="nsew")
+        middleFrameCon.rowconfigure(0, weight=1)
+        middleFrameCon.rowconfigure(1, weight=1)
+        middleFrameCon.rowconfigure(2, weight=4)
+        middleFrameCon.columnconfigure(0, weight=1)
+
+        # -------- Header --------
+        upperFrame = ctk.CTkFrame(middleFrameCon, fg_color="#F6F6F6")
+        upperFrame.grid(row=0, column=0, sticky="nsew", padx=50, pady=20)
+        upperFrame.columnconfigure(0, weight=1)
+
+        ctk.CTkLabel(
+            upperFrame,
+            text="Movie Ticketing Stand",
+            font=("Book Antiqua", 36, "bold"),
+            text_color="#665050"
+        ).grid(row=0, column=0, sticky="nsew", pady=10)
 
         # ====================== SIDE MENU ======================
-        sideFrame = tk.Frame(self, bg="#F6F6F6")
-        sideFrame.grid(row=0, column=0, sticky="nsew")
-        sideFrame.columnconfigure(0, weight=1)
-        sideFrame.rowconfigure(0, weight=8)
-        sideFrame.rowconfigure(1, weight=1)
+        sideFrame = ctk.CTkFrame(middleFrameCon, fg_color="#F6F6F6")
+        sideFrame.grid(row=1, column=0, sticky="nsew")
+        sideFrame.columnconfigure(0, weight=8)
+        sideFrame.columnconfigure(1, weight=1)
 
-        # Side menu container
-        sideMenuCon = tk.Frame(sideFrame, bg="#FFFFFF", relief=tk.RAISED)
-        sideMenuCon.grid(row=0, column=0, sticky="nsew", pady=(115, 50), padx=35)
+        sideMenuCon = ctk.CTkFrame(sideFrame, fg_color="#F6F6F6")
+        sideMenuCon.grid(row=0, column=0, sticky="nsew", padx=100, pady=(0, 20))
         for i in range(5):
-            sideMenuCon.rowconfigure(i, weight=1)
-        sideMenuCon.columnconfigure(0, weight=1)
+            sideMenuCon.columnconfigure(i, weight=1)
 
-        # Menu Buttons
+        # Menu Buttons (with radius 10)
         menus = [
-            ("UPCOMING", "#FFFFFF"),
+            ("Soon", "#FFFFFF"),
             ("Current", "#EFE9E0"),
             ("Previous", "#FFFFFF")
         ]
         for idx, (label, bgc) in enumerate(menus, start=1):
-            tk.Button(
+            ctk.CTkButton(
                 sideMenuCon,
                 text=label,
                 font=("Book Antiqua", 14),
-                fg="#665050",
-                bg=bgc,
-                relief=tk.FLAT
-            ).grid(row=idx, column=0, sticky="nsew")
+                text_color="#665050",
+                fg_color=bgc,
+                hover_color="#DDD",
+                corner_radius=10
+            ).grid(row=0, column=idx, sticky="nsew", padx=5)
 
-        # Admin Icon
-        iconFrame = tk.Frame(sideFrame, bg="#F6F6F6")
-        iconFrame.grid(row=1, column=0, sticky="nsew", pady=15, padx=35)
+        # ====================== ADMIN ICON ======================
+        iconFrame = ctk.CTkFrame(self, fg_color="#F6F6F6")
+        iconFrame.grid(row=0, column=0, sticky="nsew", ipadx=10)
+        iconFrame.rowconfigure(0, weight=1)
         iconFrame.columnconfigure(0, weight=1)
 
         img_path = os.path.join(os.path.dirname(__file__), "Assets", "person.png")
-        self.iconIMG = PhotoImage(file=img_path)
-        tk.Button(
+        self.iconIMG = ctk.CTkImage(light_image=Image.open(img_path), size=(20, 20))
+
+        ctk.CTkButton(
             iconFrame,
-            height=36,
             width=36,
+            height=36,
             image=self.iconIMG,
-            bg="#CD4126",
-            activebackground="#C65D49",
+            text="",
+            fg_color="#CD4126",
+            hover_color="#C65D49",
+            corner_radius=10,
             command=lambda: admin_login_modal(self, controller)
-        ).pack(side=tk.LEFT, anchor="s")
+        ).pack(side="bottom", anchor="se", pady=15)
 
-        # ====================== MIDDLE CONTAINER ======================
-        middleFrameCon = tk.Frame(self, bg="#F6F6F6")
-        middleFrameCon.grid(row=0, column=1, sticky="nsew")
-        middleFrameCon.rowconfigure(0, weight=1)
-        middleFrameCon.rowconfigure(1, weight=4)
-        middleFrameCon.columnconfigure(0, weight=1)
+        # ====================== MOVIES GRID ======================
+        middleFrame = ctk.CTkFrame(middleFrameCon, fg_color="#F6F6F6")
+        middleFrame.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
 
-        # -------- Header --------
-        upperFrame = tk.Frame(middleFrameCon, bg="#F6F6F6")
-        upperFrame.grid(row=0, column=0, sticky="nsew", padx=50, pady=10)
-        for c in range(4):
-            upperFrame.columnconfigure(c, weight=1)
-
-        tk.Label(
-            upperFrame,
-            text="Movie Ticketing Stand",
-            font=("Book Antiqua", 28),
-            fg="#665050",
-            bg="#F6F6F6",
-            anchor="w"
-        ).grid(row=0, column=0, sticky="nsew")
-
-        tk.Label(
-            upperFrame,
-            text="September 5, 2025",
-            font=("Book Antiqua", 15),
-            fg="#665050",
-            bg="#F6F6F6",
-            anchor="e"
-        ).grid(row=0, column=1, sticky="nsew")
-
-        # Ticket Bag
-        img_path = os.path.join(os.path.dirname(__file__), "Assets", "Ticket.png")
-        self.iconBagIMG = PhotoImage(file=img_path)
-        tk.Button(
-            upperFrame,
-            image=self.iconBagIMG,
-            bg="#F6F6F6",
-            relief=tk.FLAT
-        ).grid(row=0, column=2, sticky="w", padx=15)
-
-        # -------- Movies Grid --------
-        middleFrame = tk.Frame(middleFrameCon, bg="#F6F6F6")
-        middleFrame.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
-
-        # Grid responsiveness (2 cols, multiple rows)
         for i in range(2):
             middleFrame.columnconfigure(i, weight=1)
 
-        # Movie data list (dynamic)
         movies = [
             {"title": "Pet Sematary", "genre": "Horror|Thriller", "date": "September 5, 2025", "price": "$300"},
             {"title": "Inception", "genre": "Sci-Fi|Action", "date": "September 10, 2025", "price": "$500"},
@@ -119,52 +97,47 @@ class HomePage(tk.Frame):
             {"title": "The Dark Knight", "genre": "Action|Drama", "date": "September 20, 2025", "price": "$450"}
         ]
 
-        # Dynamically create movie cards
         for idx, movie in enumerate(movies):
-            row, col = divmod(idx, 2)  # 2 columns
+            row, col = divmod(idx, 2)
             self.create_movie_card(middleFrame, movie, row, col, controller)
 
     # Function to create movie cards dynamically
     def create_movie_card(self, parent, movie, row, col, controller):
-        frame = tk.Frame(parent, bg="#F6F6F6", relief=tk.RIDGE)
+        frame = ctk.CTkFrame(parent, fg_color="#F6F6F6")
         frame.grid(row=row, column=col, sticky="nsew", padx=10, pady=10)
         frame.columnconfigure(0, weight=1)
         frame.columnconfigure(1, weight=3)
-        frame.rowconfigure(0, weight=1)
 
-        # === Resize Poster ===
+        # === Poster as CTkImage ===
         img_path = os.path.join(os.path.dirname(__file__), movie.get("poster", "Assets/PetSematary.png"))
-        img = Image.open(img_path)
+        movie_img = ctk.CTkImage(light_image=Image.open(img_path), size=(200, 260))
 
-        # Resize to fit (adjust size as needed)
-        img = img.resize((180, 250), Image.LANCZOS)
-
-        movie_img = ImageTk.PhotoImage(img)
-
-        imgLabel = tk.Label(frame, image=movie_img, bg="#F6F6F6")
-        imgLabel.image = movie_img  # prevent garbage collection
+        imgLabel = ctk.CTkLabel(frame, image=movie_img, text="", fg_color="#F6F6F6")
+        imgLabel.image = movie_img
         imgLabel.grid(row=0, column=0, sticky="n", padx=10, pady=10)
 
-        # Info
-        infoFrame = tk.Frame(frame, bg="#F6F6F6")
+        infoFrame = ctk.CTkFrame(frame, fg_color="#F6F6F6")
         infoFrame.grid(row=0, column=1, sticky="nsew")
-        for i in range(5):
-            infoFrame.rowconfigure(i, weight=1)
         infoFrame.columnconfigure(0, weight=1)
 
-        tk.Label(infoFrame, text=movie["title"], font=("Book Antiqua", 20),
-                 fg="#665050", bg="#F6F6F6", anchor="w").grid(row=0, column=0, sticky="nsew")
+        (ctk.CTkLabel(infoFrame, text=movie["title"], font=("Book Antiqua", 24),
+                     text_color="#665050", anchor="w")
+         .grid(row=0, column=0, sticky="nsew",pady=10))
 
-        tk.Label(infoFrame, text=movie["genre"], font=("Book Antiqua", 14),
-                 fg="#665050", bg="#F6F6F6", anchor="w").grid(row=1, column=0, sticky="nsew")
+        (ctk.CTkLabel(infoFrame, text=movie["genre"], font=("Book Antiqua", 18),
+                     text_color="#665050", anchor="w")
+         .grid(row=1, column=0, sticky="nsew",pady=10))
 
-        tk.Label(infoFrame, text=movie["date"], font=("Book Antiqua", 14),
-                 fg="#665050", bg="#F6F6F6", anchor="w").grid(row=2, column=0, sticky="nsew")
+        (ctk.CTkLabel(infoFrame, text=movie["date"], font=("Book Antiqua", 18),
+                     text_color="#665050", anchor="w")
+         .grid(row=2, column=0, sticky="nsew",pady=10))
 
-        tk.Label(infoFrame, text=movie["price"], font=("Book Antiqua", 14),
-                 fg="#665050", bg="#F6F6F6", anchor="w").grid(row=3, column=0, sticky="nsew")
+        (ctk.CTkLabel(infoFrame, text=movie["price"], font=("Book Antiqua", 18),
+                     text_color="#665050", anchor="w")
+         .grid(row=3, column=0, sticky="nsew",pady=10))
 
-        tk.Button(infoFrame, text="+", font=("Book Antiqua", 14),
-                  fg="#FFFFFF", bg="#CD4126", activebackground="#C65D49",
-                  command=lambda: controller.show_frame("SelectedScreen")
-                  ).grid(row=4, column=0, sticky="w", pady=5)
+        ctk.CTkButton(infoFrame, text="+", font=("Book Antiqua", 20),
+                      text_color="#FFFFFF", fg_color="#CD4126", hover_color="#C65D49",
+                      corner_radius=10, width=30, height=30,
+                      command=lambda: controller.show_frame("SelectedScreen")
+                      ).grid(row=4, column=0, sticky="w", pady=5)

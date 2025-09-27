@@ -1,163 +1,199 @@
-import tkinter as tk
-from tkinter import ttk, PhotoImage
-import os
+import customtkinter as ctk
 from Modals.Register import register_modal
-from Styles.Table import setup_table_style, zebra_striping, sort_table, disable_resize
 
-class AdminPage(tk.Frame):
+
+class AdminPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
-        super().__init__(parent, bg="#F4F4F4")
+        super().__init__(parent, fg_color="#F4F4F4")
 
-        # Apply global Table styles
-        setup_table_style()
-
-        #Main layout for admin page
+        # Main layout
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=9)
         self.rowconfigure(0, weight=1)
 
-        #Frame Content for side Menu
-        sideMenuCon = tk.Frame(self, bg="#FFFFFF", relief="groove")
-        sideMenuCon.grid(row=0, column=0, sticky="nsew")
-        sideMenuCon.columnconfigure(0, weight=1)
+        # ================= Sidebar ================= #
+        sidebar = ctk.CTkFrame(self, fg_color="#FFFFFF", corner_radius=0)
+        sidebar.grid(row=0, column=0, sticky="nsew")
+        sidebar.columnconfigure(0, weight=1)
 
-        #Image path
-        img_path = os.path.join(os.path.dirname(__file__), "Assets", "Bag.png")
-        self.iconIMG = PhotoImage(file=img_path)
+        logoLabel = ctk.CTkLabel(sidebar, text="🎬 Admin",
+                                 font=("Book Antiqua", 18, "bold"),
+                                 text_color="#CD4126")
+        logoLabel.grid(row=0, column=0, sticky="nsew", pady=(30, 40))
 
-        # IMG LABEL
-        imgLabel = tk.Label(sideMenuCon, bg="#FFFFFF", image=self.iconIMG)
-        imgLabel.grid(row=0, column=0, sticky="nsew", pady=(60,20))
+        def menu_button(text, row, active=False, command=None):
+            btn = ctk.CTkButton(
+                sidebar,
+                text=text,
+                font=("Book Antiqua", 13),
+                fg_color="#EFE9E0" if active else "#FFFFFF",
+                text_color="#665050",
+                hover_color="#d6cfc5",
+                corner_radius=6,
+                command=command
+            )
+            btn.grid(row=row, column=0, sticky="ew", padx=15, pady=3, ipady=10)
+            return btn
 
-        # Buttons & Labels for sideBar
-        tablesLabel = tk.Label(sideMenuCon, bg="#FFFFFF", text="TABLES",
-                               font=("Book Antiqua", 12), fg="#665050")
-        tablesLabel.grid(row=1, column=0, sticky="nsw", ipady=15, ipadx=10)
+        menu_button("Movies", 2, active=True, command=lambda: controller.show_frame("AdminPage"))
+        menu_button("Sales", 3, command=lambda: controller.show_frame("SalesPage"))
+        menu_button("Sales History", 4, command=lambda: controller.show_frame("SalesHistoryPage"))
 
-        movieBtn = tk.Button(sideMenuCon, bg="#EFE9E0", text="Movies",
-                             font=("Book Antiqua", 12), fg="#665050", relief="flat")
-        movieBtn.grid(row=2, column=0, sticky="nsew", ipady=10)
+        logoutBtn = ctk.CTkButton(sidebar, text="Logout",
+                                  font=("Book Antiqua", 12),
+                                  fg_color="#CD4126", text_color="white",
+                                  hover_color="#a8321d", corner_radius=6)
+        logoutBtn.grid(row=6, column=0, sticky="sew", padx=15, pady=(10, 20), ipady=8)
 
-        salesBtn = tk.Button(sideMenuCon, bg="#FFFFFF", text="Sales",
-                             font=("Book Antiqua", 12), fg="#665050", relief="flat",
-                             command=lambda: controller.show_frame("SalesPage"))
-        salesBtn.grid(row=3, column=0, sticky="nsew", ipady=10)
+        # ================= Main Content ================= #
+        mainFrame = ctk.CTkFrame(self, fg_color="#F4F4F4")
+        mainFrame.grid(row=0, column=1, sticky="nsew")
+        mainFrame.columnconfigure(0, weight=1)
+        mainFrame.rowconfigure(1, weight=1)  # Table row grows
 
-        salesHistoryBtn = tk.Button(sideMenuCon, bg="#FFFFFF", text="Sales History",
-                                    font=("Book Antiqua", 12), fg="#665050", relief="flat",
-                                    command=lambda: controller.show_frame("SalesHistoryPage"))
-        salesHistoryBtn.grid(row=4, column=0, sticky="nsew", ipady=10)
+        # ---- Title ---- #
+        title = ctk.CTkLabel(mainFrame, text="Movies Management",
+                             font=("Book Antiqua", 18, "bold"),
+                             text_color="#665050")
+        title.grid(row=0, column=0, sticky="w", padx=20, pady=(20, 10))
 
-        optionsLabel = tk.Label(sideMenuCon, bg="#FFFFFF", text="OPTION",
-                                font=("Book Antiqua", 12), fg="#665050")
-        optionsLabel.grid(row=5, column=0, sticky="nsw", ipady=15, ipadx=10)
+        # ---- Table card ---- #
+        tableCard = ctk.CTkFrame(mainFrame, fg_color="#FFFFFF", corner_radius=12)
+        tableCard.grid(row=1, column=0, sticky="nsew", padx=20, pady=(0, 10))
+        tableCard.columnconfigure(tuple(range(5)), weight=1)
 
-        logoutBtn = tk.Button(sideMenuCon, bg="#FFFFFF", text="Logout",
-                              font=("Book Antiqua", 12), fg="#665050", relief="flat")
-        logoutBtn.grid(row=6, column=0, sticky="nsew", ipady=10)
+        # Top bar inside table card
+        cardTop = ctk.CTkFrame(tableCard, fg_color="#FFFFFF")
+        cardTop.grid(row=0, column=0, columnspan=5, sticky="ew", padx=10, pady=(30,5))
+        cardTop.columnconfigure(0, weight=1)
+        cardTop.columnconfigure(1, weight=0)
+        cardTop.columnconfigure(2, weight=0)
 
-        # Main frame for tables ============================================================
-        mainMenu = tk.Frame(self, bg="#F4F4F4")
-        mainMenu.grid(row=0, column=1, sticky="nsew")
-        mainMenu.rowconfigure(0, weight=0)
-        mainMenu.rowconfigure(1, weight=1)
-        mainMenu.columnconfigure(0, weight=1)
+        search = ctk.CTkEntry(cardTop, placeholder_text="Search...",
+                              font=("Book Antiqua", 12), width=250,
+                              height=30 ,fg_color="#f4f4f4")
+        search.grid(row=0, column=1, sticky="e", padx=10)
 
-        # Frame container for tables
-        mainMenuCon = tk.Frame(mainMenu, bg="#FFFFFF", relief="groove")
-        mainMenuCon.grid(row=1, column=0, sticky="nsew", padx=25, pady=35)
-        mainMenuCon.rowconfigure(0, weight=0)
-        mainMenuCon.rowconfigure(1, weight=0)
-        mainMenuCon.rowconfigure(2, weight=0)
-        mainMenuCon.rowconfigure(3, weight=3)
-        mainMenuCon.columnconfigure(0, weight=1)
+        addBtn = ctk.CTkButton(cardTop, text="Add New",
+                               font=("Book Antiqua", 12, "bold"),
+                               fg_color="#CD4126", text_color="white",
+                               hover_color="#a8321d", corner_radius=6,
+                               height=30,
+                               command= lambda: register_modal(self))
+        addBtn.grid(row=0, column=2, sticky="e")
 
-        # Title Row =====================================================================
-        Title = tk.Label(mainMenuCon, bg="#FFFFFF", text="MOVIES TABLE",
-                         font=("Book Antiqua", 18), fg="#665050", anchor="sw")
-        Title.grid(row=0, column=0, sticky="nsew", padx= 25, ipady=15)
-        Title.columnconfigure(0, weight=1)
+        # Table headers
+        headers = ["ID", "Movie", "Genre", "Price", "Status"]
+        self.headers = headers
+        for i, h in enumerate(headers):
+            lbl = ctk.CTkLabel(tableCard,
+                               text=h,
+                               font=("Book Antiqua", 13, "bold"),
+                               text_color="#665050", fg_color="#f9f7f4",
+                               corner_radius=6,pady=8)
+            lbl.grid(row=1, column=i, sticky="nsew", padx=5, pady=10)
 
-        subTitle = tk.Label(mainMenuCon, bg="#FFFFFF", text="Display movie information.",
-                            font=("Book Antiqua", 12), fg="#665050", anchor="nw")
-        subTitle.grid(row=1, column=0, sticky="nsew", padx= 25)
+        # Example data
+        self.rows = [
+            ("001", "Pet Sematary", "Horror", "$300", "Active"),
+            ("002", "Frozen", "Animation", "$250", "Inactive"),
+            ("003", "Avengers", "Action", "$400", "Active"),
+            ("004", "Titanic", "Romance", "$350", "Inactive"),
+            ("005", "The Conjuring", "Horror", "$280", "Active"),
+            ("006", "Moana", "Animation", "$260", "Inactive"),
+            ("007", "Inception", "Sci-Fi", "$500", "Active"),
+            ("008", "Joker", "Drama", "$330", "Active"),
+            ("009", "The Matrix", "Sci-Fi", "$450", "Active"),
+            ("010", "Parasite", "Thriller", "$320", "Inactive"),
+            ("011", "Lion King", "Animation", "$270", "Active"),
+            ("012", "It", "Horror", "$290", "Inactive"),
+            ("013", "Black Panther", "Action", "$480", "Active"),
+            ("014", "La La Land", "Romance", "$310", "Inactive"),
+            ("015", "The Godfather", "Crime", "$500", "Active"),
+            ("016", "Coco", "Animation", "$260", "Active"),
+            ("017", "Avengers: Endgame", "Action", "$520", "Active"),
+            ("018", "The Notebook", "Romance", "$300", "Inactive"),
+            ("019", "Get Out", "Horror", "$280", "Active"),
+            ("020", "Spider-Man: No Way Home", "Action", "$490", "Active"),
+        ]
 
-        # Container for Table =====================================================================
-        tableCon = tk.Frame(mainMenuCon, bg="#FFFFFF")
-        tableCon.grid(row=3, column=0, sticky="nsew", pady=10)
+        # Pagination setup
+        self.page_size = 10
+        self.current_page = 0
+        self.tableCard = tableCard
+        self.render_page()
 
-        # --- Table ---
-        table = ttk.Treeview(
-            tableCon,
-            columns=('ID', 'TITLE', 'Description', 'Price', 'Genre', 'Date'),
-            show='headings',
-            style="Custom.Treeview"
+        # ---- Pagination controls ---- #
+        pagination = ctk.CTkFrame(mainFrame, fg_color="#F4F4F4")
+        pagination.grid(row=2, column=0, sticky="ew", pady=(0, 60))
+
+        prevBtn = ctk.CTkButton(
+            pagination,
+            text="◀ Previous",
+            fg_color="#FFFFFF",
+            text_color="#665050",
+            hover_color="#d6cfc5",
+            corner_radius=6,
+            width=100,
+            command=self.prev_page
+        )
+        prevBtn.pack(side="left", padx=20)
+
+        nextBtn = ctk.CTkButton(
+            pagination,
+            text="Next ▶",
+            fg_color="#FFFFFF",
+            text_color="#665050",
+            hover_color="#d6cfc5",
+            corner_radius=6,
+            width=100,
+            command=self.next_page
+        )
+        nextBtn.pack(side="right", padx=20)
+
+    # ================= Helper Methods ================= #
+    def status_badge(self, parent, text):
+        color_map = {
+            "Active": "#22c55e",
+            "Inactive": "#ef4444",
+            "Pending": "#f59e0b",
+        }
+        return ctk.CTkLabel(
+            parent,
+            text=text,
+            font=("Book Antiqua", 13, "bold"),
+            text_color="white",
+            fg_color=color_map.get(text, "#6b7280"),
+            corner_radius=8,
+            padx=10,
+            pady=4
         )
 
-        for col in ('ID', 'TITLE', 'Description', 'Price', 'Genre', 'Date'):
-            table.heading(col, text=col, anchor='center')
+    def render_page(self):
+        # Clear old rows (everything below header row)
+        for widget in self.tableCard.winfo_children()[len(self.headers) + 1:]:
+            widget.destroy()
 
-        table.pack(expand=True, fill="both", padx=20)
+        start = self.current_page * self.page_size
+        end = start + self.page_size
+        for r, row in enumerate(self.rows[start:end], start=2):
+            for c, val in enumerate(row):
+                if self.headers[c] == "Status":
+                    badge = self.status_badge(self.tableCard, val)
+                    badge.grid(row=r, column=c, sticky="nsew", padx=10, pady=8)
+                else:
+                    lbl = ctk.CTkLabel(self.tableCard,
+                                       text=val,
+                                       font=("Book Antiqua", 12),
+                                       text_color="#333333")
+                    lbl.grid(row=r, column=c, sticky="nsew", padx=10, ipady=10)
 
-        # Column alignment
-        table.column('ID', anchor='e', width=80)
-        table.column('TITLE', anchor='w', width=200)
-        table.column('Description', anchor='w', width=300, stretch=False)
-        table.column('Price', anchor='e', width=100)
-        table.column('Genre', anchor='w', width=150)
-        table.column('Date', anchor='w', width=150)
+    def next_page(self):
+        if (self.current_page + 1) * self.page_size < len(self.rows):
+            self.current_page += 1
+            self.render_page()
 
-        # Apply zebra striping
-        zebra_striping(table)
-
-        # Disable resize
-        table.bind("<Button-1>", lambda e: disable_resize(e, table))
-
-        # Table Sample Data
-        content = ['001', 'Pet Sematary', 'visiting their old house in...', '$300',
-                   'Horror|Thriller', 'November 5, 2025']
-
-        # Random content
-        for i in range(15):
-            table.insert(parent='', index=0, values=content)
-
-        # Container for Buttons ================================================================
-        conBtn = tk.Frame(mainMenuCon, bg="#FFFFFF")
-        conBtn.grid(row=2, column=0, sticky="nsew", ipady=10)
-        conBtn.columnconfigure(0, weight=1)
-        conBtn.columnconfigure(1, weight=1)
-        conBtn.rowconfigure(0, weight=1)
-
-        # --- Search Bar --------------------------------------------------------------------------
-        searchCon = tk.Frame(conBtn, bg="#FFFFFF")
-        searchCon.grid(row=0, column=1, sticky="se", padx=15, pady=(15,5))
-
-        tk.Label(searchCon, text="Search:", font=("Book Antiqua", 12), bg="#FFFFFF").pack(side="left")
-        search_entry = tk.Entry(searchCon, font=("Book Antiqua", 12))
-        search_entry.pack(side="left", ipadx=65, padx=5)
-
-        # Keep reference of data
-        self.all_data = [content for i in range(15)]  # sample dataset
-
-        # Function to update table
-        def update_table(data):
-            table.delete(*table.get_children())  # clear
-            for row in data:
-                table.insert('', 'end', values=row)
-
-        update_table(self.all_data)
-
-        # Search function
-        def search():
-            query = search_entry.get().lower()
-            filtered = [row for row in self.all_data if query in str(row).lower()]
-            update_table(filtered)
-
-        tk.Button(searchCon, text="Go", command=search, font=("Book Antiqua", 10)).pack(side="left", padx=5)
-
-
-        # Register Movie Button ==================================================================
-        registerBtn = tk.Button(conBtn, bg="#CD4126", text="Register",
-                                font=("Book Antiqua", 9), fg="#FFFFFF",
-                                command=lambda: register_modal(self))
-        registerBtn.grid(row=0, column=0, ipady=5, sticky="sw", ipadx=30, padx=25)
+    def prev_page(self):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.render_page()
