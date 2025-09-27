@@ -59,8 +59,8 @@ class HomePage(ctk.CTkFrame):
                 text_color="#665050",
                 fg_color=bgc,
                 hover_color="#DDD",
-                corner_radius=10
-            ).grid(row=0, column=idx, sticky="nsew", padx=5)
+                corner_radius=10,
+            ).grid(row=0, column=idx, sticky="nsew", padx=5, ipady=5)
 
         # ====================== ADMIN ICON ======================
         iconFrame = ctk.CTkFrame(self, fg_color="#F6F6F6")
