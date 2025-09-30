@@ -8,7 +8,7 @@ class Movies(Dbh):
         conn = self._connection()
 
         if not conn:
-            print('Error connecting to database!')
+            print('Error connecting to database!...Parent Error(Movies)')
             return False
 
         cursor = conn.cursor()
@@ -27,16 +27,14 @@ class Movies(Dbh):
             cursor.close()
             conn.close()
 
-    def getMovies(self, title):
-
-        # Setting Connection
+    def _getMovies(self, title):
+        """Fetch movies by exact title."""
         conn = self._connection()
-
         if not conn:
-            print('Error connecting to database!')
+            print('Error connecting to database!...Parent Error(Movies)')
             return False
 
-        cursor = conn.cursor(dictionary=True)  # returns rows as dict instead of tuple
+        cursor = conn.cursor(dictionary=True)  # return rows as dict
         query = "SELECT * FROM Movies WHERE title = %s"
         values = (title,)
 
@@ -46,6 +44,27 @@ class Movies(Dbh):
             return results
         except Exception as e:
             print('Error fetching movies: {}'.format(e))
+            return False
+        finally:
+            cursor.close()
+            conn.close()
+
+    def _getAllMovies(self):
+        """Fetch all movies."""
+        conn = self._connection()
+        if not conn:
+            print('Error connecting to database!...Parent Error(Movies)')
+            return False
+
+        cursor = conn.cursor(dictionary=True)
+        query = "SELECT * FROM Movies"
+
+        try:
+            cursor.execute(query)
+            results = cursor.fetchall()
+            return results
+        except Exception as e:
+            print('Error fetching all movies: {}'.format(e))
             return False
         finally:
             cursor.close()

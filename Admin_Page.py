@@ -79,7 +79,7 @@ class AdminPage(ctk.CTkFrame):
                                fg_color="#CD4126", text_color="white",
                                hover_color="#a8321d", corner_radius=6,
                                height=30,
-                               command= lambda: register_modal(self))
+                               command= lambda: register_modal(self, controller))
         addBtn.grid(row=0, column=2, sticky="e")
 
         # Table headers
