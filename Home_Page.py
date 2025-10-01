@@ -2,6 +2,7 @@ import os
 import customtkinter as ctk
 from Modals.Admin import admin_login_modal
 from PIL import Image
+from Classes.MoviesView_Class import MoviesView
 
 
 class HomePage(ctk.CTkFrame):
@@ -90,16 +91,18 @@ class HomePage(ctk.CTkFrame):
         for i in range(2):
             middleFrame.columnconfigure(i, weight=1)
 
-        movies = [
-            {"title": "Pet Sematary", "genre": "Horror|Thriller", "date": "September 5, 2025", "price": "$300"},
-            {"title": "Inception", "genre": "Sci-Fi|Action", "date": "September 10, 2025", "price": "$500"},
-            {"title": "Frozen II", "genre": "Animation|Adventure", "date": "September 15, 2025", "price": "$350"},
-            {"title": "The Dark Knight", "genre": "Action|Drama", "date": "September 20, 2025", "price": "$450"}
-        ]
+        # ✅ Fetch movies from DB
+        mv = MoviesView()
+        movies = mv.getMoviesThisMonth()
 
-        for idx, movie in enumerate(movies):
-            row, col = divmod(idx, 2)
-            self.create_movie_card(middleFrame, movie, row, col, controller)
+        # If no movies, you can display a fallback label
+        if not movies:
+            ctk.CTkLabel(middleFrame, text="No movies available this month.",
+                         font=("Book Antiqua", 20), text_color="#665050").grid(row=0, column=0, pady=20)
+        else:
+            for idx, movie in enumerate(movies):
+                row, col = divmod(idx, 2)
+                self.create_movie_card(middleFrame, movie, row, col, controller)
 
     # Function to create movie cards dynamically
     def create_movie_card(self, parent, movie, row, col, controller):
@@ -109,7 +112,7 @@ class HomePage(ctk.CTkFrame):
         frame.columnconfigure(1, weight=3)
 
         # === Poster as CTkImage ===
-        img_path = os.path.join(os.path.dirname(__file__), movie.get("poster", "Assets/PetSematary.png"))
+        img_path = os.path.join(os.path.dirname(__file__), "Assets", "Posters", movie["poster"])
         movie_img = ctk.CTkImage(light_image=Image.open(img_path), size=(200, 260))
 
         imgLabel = ctk.CTkLabel(frame, image=movie_img, text="", fg_color="#F6F6F6")

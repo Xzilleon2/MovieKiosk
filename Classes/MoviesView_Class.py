@@ -1,32 +1,28 @@
-from Classes import Movies_Class
-from Includes import Dbh
+from Classes.MoviesCntrl_Class import Movies
 
-class MoviesView(Movies_Class):
-
-    # View all Movies
-    def showMovies(self, title=None):
+class MoviesView(Movies):
+    def getMoviesThisMonth(self):
         """
-        Fetch and display movies.
-        If a title is given, show only matching movies,
-        otherwise show all movies.
+        Fetch available movies created this month (limit 4).
+        Returns a list of dictionaries.
         """
-        if title:
-            movies = self._getMovies(title)
-        else:
-            movies = self._getAllMovies()
+        movies = self._Get_movies()
 
         if not movies:
-            print("No movies found.")
-            return
+            return []
 
-        print("=== Movies ===")
+        result = []
         for movie in movies:
-            print(f"ID: {movie['movie_id']}")
-            print(f"Title: {movie['title']}")
-            print(f"Genre: {movie['genre']}")
-            print(f"Price: {movie['price']}")
-            print(f"Duration: {movie['duration']} mins")
-            print(f"Rating: {movie['rating']}")
-            print(f"Description: {movie['description']}")
-            print(f"Poster Path: {movie['poster_path']}")
-            print("-" * 30)
+            result.append({
+                "id": movie["movie_id"],
+                "title": movie["title"],
+                "genre": movie["genre"],
+                "price": f"₱{movie['price']}",
+                "duration": f"{movie['duration']} mins",
+                "date": movie["release_date"].strftime("%B %d, %Y"),
+                "rating": movie["rating"],
+                "description": movie["description"],
+                "poster": movie["poster_path"],
+                "status": movie["status"],
+            })
+        return result

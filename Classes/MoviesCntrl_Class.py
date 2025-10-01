@@ -1,30 +1,24 @@
-from Classes import Movies_Class
-import datetime
+from Classes.Movies_Class import Movies
 
-class MoviesCntrl_Class(Movies_Class):
-    def __init__(self, title, genre, price, duration, rating, status, description, poster_path):
+class MoviesCntrl(Movies):
+    def __init__(self, title, genre, price, duration, rating, description, poster_path, status):
         super().__init__()  # init DB
         self.title = title
         self.genre = genre
         self.price = price
         self.duration = duration
         self.rating = rating
-        self.status = status
         self.description = description
         self.poster_path = poster_path
-
-        # Store messages (like PHP $error / $success)
-        self.message = ""
-        self.errors = {}
+        self.status = status
 
     # --------------------------------- Save ---------------------------------------------------------
-    def save(self):
+    def AddMovie(self):
         """Validate and insert movie into DB."""
         ok, errors = self.checkErrors()
         if not ok:
-            self.errors = errors
-            self.message = "Validation failed. Please check the form. (Controller)"
-            return False, errors
+            print("Validation failed:", errors)
+            return False
 
         result = self._InsertMovie(
             self.title,
@@ -32,18 +26,17 @@ class MoviesCntrl_Class(Movies_Class):
             self.price,
             self.duration,
             self.rating,
-            self.status,
             self.description,
-            self.poster_path
+            self.poster_path,
+            self.status
         )
 
         if result:
-            self.message = "Movie saved successfully ✅"
-            return True, {}
+            print("✅ Movie saved successfully.")
+            return True
         else:
-            self.errors = {"db": ["Database insert failed. (Controller)"]}
-            self.message = "Database insert failed. (Controller)"
-            return False, self.errors
+            print("❌ Database insert failed.")
+            return False
 
     # --------------------------------- Error Handling -------------------------------------------------------
     def checkErrors(self):
