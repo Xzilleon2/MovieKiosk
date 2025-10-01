@@ -1,8 +1,8 @@
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
 
-
 def register_modal(self, controller):
+
     """
     Modal window for registering a new movie.
     :param self: parent frame
@@ -13,6 +13,8 @@ def register_modal(self, controller):
     modal.configure(fg_color="#F4F4F4")
     modal.transient(self)
     modal.grab_set()
+
+    movie_data = None
 
     # Modal size & center
     w, h = 480, 700
@@ -114,6 +116,7 @@ def register_modal(self, controller):
 
     # ===== Register Button =====
     def on_register():
+        nonlocal movie_data
         movie_data = {
             "title": title_entry.get().strip(),
             "genre": genre_combobox.get().strip(),
@@ -124,22 +127,11 @@ def register_modal(self, controller):
             "description": description_text.get("1.0", "end-1c").strip(),
             "poster": poster_path_entry.get().strip()
         }
+        modal.destroy()
 
-        # --- Validation ---
-        if not movie_data["title"]:
-            messagebox.showerror("Validation Error", "Title is required.")
-            return
-        if not movie_data["genre"]:
-            messagebox.showerror("Validation Error", "Genre is required.")
-            return
-
-        # Call controller
-        ok, msg = controller.save(movie_data)
-        if ok:
-            messagebox.showinfo("Success", msg if msg else "Movie registered successfully!")
-            modal.destroy()
-        else:
-            messagebox.showerror("Error", msg if msg else "Failed to register movie.")
+        # 👇 call addMovie here
+        from Process.AddMovie import addMovie
+        addMovie(self, movie_data)
 
     register_btn = ctk.CTkButton(
         card, text="➕ Register Movie",
@@ -149,3 +141,6 @@ def register_modal(self, controller):
         command=on_register
     )
     register_btn.grid(row=1, column=0, pady=15, ipadx=20, ipady=5)
+
+    modal.wait_window()
+    return movie_data if movie_data else None
