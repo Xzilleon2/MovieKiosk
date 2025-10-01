@@ -1,5 +1,6 @@
 import customtkinter as ctk
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
+
 
 def register_modal(self, controller):
     """
@@ -34,13 +35,14 @@ def register_modal(self, controller):
     content = ctk.CTkFrame(card, fg_color="#FFFFFF")
     content.grid(row=0, column=0, sticky="nsew", padx=10, pady=(10, 5))
 
-    # Title Label
+    # ===== Title Label =====
     ctk.CTkLabel(
         content, text="🎬 Register New Movie",
         font=("Book Antiqua", 22, "bold"),
         text_color="#CD4126"
     ).pack(pady=(10, 20))
 
+    # ===== Styles =====
     entry_style = {
         "font": ("Book Antiqua", 12),
         "fg_color": "#f9f9f9",
@@ -48,7 +50,6 @@ def register_modal(self, controller):
         "border_color": "#d6cfc5",
         "corner_radius": 6
     }
-
     combo_style = {
         "fg_color": "#f9f9f9",
         "text_color": "black",
@@ -58,7 +59,7 @@ def register_modal(self, controller):
         "corner_radius": 6
     }
 
-    # --- Input Fields ---
+    # ===== Helpers =====
     def labeled_entry(label, parent, **kwargs):
         ctk.CTkLabel(parent, text=label, text_color="#665050", anchor="w").pack(fill="x", padx=15)
         entry = ctk.CTkEntry(parent, **kwargs)
@@ -71,28 +72,27 @@ def register_modal(self, controller):
         combo.pack(fill="x", padx=15, pady=5)
         return combo
 
+    # ===== Inputs =====
     title_entry = labeled_entry("Title", content, **entry_style)
-    genre_combobox = labeled_combo("Genre", content, ["Action", "Horror", "Comedy", "Drama", "Sci-Fi", "Romance"], **combo_style)
+    genre_combobox = labeled_combo("Genre", content,
+                                   ["Action", "Horror", "Comedy", "Drama", "Sci-Fi", "Romance"], **combo_style)
     price_entry = labeled_entry("Price", content, **entry_style)
     duration_entry = labeled_entry("Duration (mins)", content, **entry_style)
-    rating_combobox = labeled_combo("Rating", content, ["G", "PG", "PG-13", "R", "NC-17"], **combo_style)
-    status_combobox = labeled_combo("Status", content, ["Available", "NotAvailable"], **combo_style)
+    rating_combobox = labeled_combo("Rating", content,
+                                    ["G", "PG", "PG-13", "R", "NC-17"], **combo_style)
+    status_combobox = labeled_combo("Status", content,
+                                    ["Available", "NotAvailable"], **combo_style)
 
-    # --- Description ---
+    # ===== Description =====
     ctk.CTkLabel(content, text="Description", text_color="#665050", anchor="w").pack(fill="x", padx=15, pady=(10, 0))
     description_text = ctk.CTkTextbox(
-        content,
-        height=160,
-        fg_color="#f9f9f9",
-        text_color="black",
-        border_color="#d6cfc5",
-        corner_radius=6,
-        wrap="word"
+        content, height=160, fg_color="#f9f9f9", text_color="black",
+        border_color="#d6cfc5", corner_radius=6, wrap="word"
     )
     description_text.pack(fill="x", padx=15, pady=5)
     description_text.configure(padx=8, pady=8)
 
-    # --- Poster Upload ---
+    # ===== Poster Upload =====
     def upload_poster():
         file = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.png *.jpeg")])
         if file:
@@ -106,24 +106,40 @@ def register_modal(self, controller):
 
     poster_path_entry = ctk.CTkEntry(poster_frame, **entry_style)
     poster_path_entry.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
-    upload_btn = ctk.CTkButton(poster_frame, text="Browse", fg_color="#CD4126", hover_color="#a8321d",
-                               text_color="white", width=80, command=upload_poster)
+    upload_btn = ctk.CTkButton(
+        poster_frame, text="Browse", fg_color="#CD4126", hover_color="#a8321d",
+        text_color="white", width=80, command=upload_poster
+    )
     upload_btn.grid(row=0, column=1, padx=5)
 
-    # --- Register Button ---
+    # ===== Register Button =====
     def on_register():
         movie_data = {
-            "title": title_entry.get(),
-            "genre": genre_combobox.get(),
-            "price": price_entry.get(),
-            "duration": duration_entry.get(),
-            "rating": rating_combobox.get(),
-            "status": status_combobox.get(),
-            "description": description_text.get("1.0", "end-1c"),
-            "poster": poster_path_entry.get()
+            "title": title_entry.get().strip(),
+            "genre": genre_combobox.get().strip(),
+            "price": price_entry.get().strip(),
+            "duration": duration_entry.get().strip(),
+            "rating": rating_combobox.get().strip(),
+            "status": status_combobox.get().strip(),
+            "description": description_text.get("1.0", "end-1c").strip(),
+            "poster": poster_path_entry.get().strip()
         }
-        controller.register_movie(movie_data)  # ✅ send to controller
-        modal.destroy()
+
+        # --- Validation ---
+        if not movie_data["title"]:
+            messagebox.showerror("Validation Error", "Title is required.")
+            return
+        if not movie_data["genre"]:
+            messagebox.showerror("Validation Error", "Genre is required.")
+            return
+
+        # Call controller
+        ok, msg = controller.save(movie_data)
+        if ok:
+            messagebox.showinfo("Success", msg if msg else "Movie registered successfully!")
+            modal.destroy()
+        else:
+            messagebox.showerror("Error", msg if msg else "Failed to register movie.")
 
     register_btn = ctk.CTkButton(
         card, text="➕ Register Movie",
