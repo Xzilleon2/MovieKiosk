@@ -78,14 +78,6 @@ class SalesPage(ctk.CTkFrame):
         self.search_entry.grid(row=0, column=1, sticky="e", padx=10)
         self.search_entry.bind("<KeyRelease>", self.handle_search)  # Bind search event
 
-        addBtn = ctk.CTkButton(cardTop, text="Add New",
-                               font=("Book Antiqua", 12, "bold"),
-                               fg_color="#3E5F44", text_color="#E8FFD7",
-                               hover_color="#5E936C", corner_radius=6,
-                               height=30,
-                               command=lambda: register_modal(self, controller))
-        addBtn.grid(row=0, column=2, sticky="e")
-
         # Table headers
         headers = ["ID", "Movie", "Genre", "Price", "Duration", "Rating", "Status", "Action"]
         self.headers = headers
@@ -218,7 +210,7 @@ class SalesPage(ctk.CTkFrame):
 
                     # Delete Button
                     del_btn = ctk.CTkButton(
-                        action_frame, text="🗑", width=30, height=30,
+                        action_frame, text="⛔", width=30, height=30, font=("Book Antiqua", 12),
                         fg_color="#ef4444", hover_color="#dc2626",
                         command=lambda m_id=movie["id"], m_title=movie["title"]: delete_modal(self, m_id, m_title)
                     )
@@ -226,7 +218,7 @@ class SalesPage(ctk.CTkFrame):
 
                     # Update Button
                     upd_btn = ctk.CTkButton(
-                        action_frame, text="🖋", width=30, height=30,
+                        action_frame, text="💵", width=30, height=30, font=("Book Antiqua", 12),
                         fg_color="#22c55e", hover_color="#16a34a",
                         command=lambda
                             m_id=movie["id"], m_title=movie["title"], m_genre=movie["genre"],

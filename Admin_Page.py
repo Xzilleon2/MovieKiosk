@@ -4,7 +4,6 @@ from Classes.MoviesView_Class import MoviesView
 from Modals.Delete import delete_modal
 from Modals.Update import update_modal
 
-
 class AdminPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         super().__init__(parent, fg_color="#E8FFD7")
@@ -83,7 +82,7 @@ class AdminPage(ctk.CTkFrame):
                                fg_color="#3E5F44", text_color="#E8FFD7",
                                hover_color="#5E936C", corner_radius=6,
                                height=30,
-                               command=lambda: register_modal(self, controller))
+                               command=lambda: register_modal(self))
         addBtn.grid(row=0, column=2, sticky="e")
 
         # Table headers
@@ -136,9 +135,8 @@ class AdminPage(ctk.CTkFrame):
     # ================= Helper Methods ================= #
     def status_badge(self, parent, text):
         color_map = {
-            "Active": "#22c55e",
-            "Inactive": "#ef4444",
-            "Pending": "#f59e0b",
+            "Available": "#22c55e",
+            "NotAvailable": "#ef4444",
         }
         return ctk.CTkLabel(
             parent,
@@ -188,20 +186,29 @@ class AdminPage(ctk.CTkFrame):
 
         for r, movie in enumerate(self.rows[start:end], start=2):
             for c, header in enumerate(self.headers):
-                if header == "Status":
-                    badge = self.status_badge(self.tableCard, movie["status"])
-                    badge.grid(row=r, column=c, sticky="nsew", padx=10, pady=8)
+                if header == "ID":
+                    lbl = ctk.CTkLabel(self.tableCard, text=str(movie["id"]),
+                                       font=("Book Antiqua", 12), text_color="#3E5F44")
+                    lbl.grid(row=r, column=c, sticky="nsew", padx=10, ipady=10)
+
+                elif header == "Movie":
+                    lbl = ctk.CTkLabel(self.tableCard, text=movie["title"],
+                                       font=("Book Antiqua", 12), text_color="#3E5F44")
+                    lbl.grid(row=r, column=c, sticky="nsew", padx=10, ipady=10)
+
+                elif header == "Genre":
+                    lbl = ctk.CTkLabel(self.tableCard, text=movie["genre"],
+                                       font=("Book Antiqua", 12), text_color="#3E5F44")
+                    lbl.grid(row=r, column=c, sticky="nsew", padx=10, ipady=10)
 
                 elif header == "Price":
-                    price_text = f"₱{movie['price']:.2f}" if isinstance(movie['price'],
-                                                                        (int, float)) else "Invalid Price"
+                    price_text = f"₱{movie['price']:.2f}" if isinstance(movie['price'], (int, float)) else "Invalid Price"
                     lbl = ctk.CTkLabel(self.tableCard, text=price_text,
                                        font=("Book Antiqua", 12), text_color="#3E5F44")
                     lbl.grid(row=r, column=c, sticky="nsew", padx=10, ipady=10)
 
                 elif header == "Duration":
-                    duration_text = f"{movie['duration']} mins" if isinstance(movie['duration'],
-                                                                              int) else "Invalid Duration"
+                    duration_text = f"{movie['duration']} mins" if isinstance(movie['duration'], int) else "Invalid Duration"
                     lbl = ctk.CTkLabel(self.tableCard, text=duration_text,
                                        font=("Book Antiqua", 12), text_color="#3E5F44")
                     lbl.grid(row=r, column=c, sticky="nsew", padx=10, ipady=10)
@@ -210,6 +217,10 @@ class AdminPage(ctk.CTkFrame):
                     lbl = ctk.CTkLabel(self.tableCard, text=movie["rating"],
                                        font=("Book Antiqua", 12), text_color="#3E5F44")
                     lbl.grid(row=r, column=c, sticky="nsew", padx=10, ipady=10)
+
+                elif header == "Status":
+                    badge = self.status_badge(self.tableCard, movie["status"])
+                    badge.grid(row=r, column=c, sticky="nsew", padx=10, pady=8)
 
                 elif header == "Action":
                     action_frame = ctk.CTkFrame(self.tableCard, fg_color="#93DA97")
@@ -228,26 +239,12 @@ class AdminPage(ctk.CTkFrame):
                     upd_btn = ctk.CTkButton(
                         action_frame, text="🖋", width=30, height=30,
                         fg_color="#22c55e", hover_color="#16a34a",
-                        command=lambda
-                            m_id=movie["id"], m_title=movie["title"], m_genre=movie["genre"],
-                            m_price=movie["price"], m_duration=movie["duration"], m_rating=movie["rating"],
-                            m_status=movie["status"], m_description=movie["description"], m_poster=movie["poster"]:
-                        update_modal(
-                            self, m_id, m_title, m_genre, m_price,
-                            m_duration, m_rating, m_status,
-                            m_description, m_poster
-                        )
+                        command=lambda m_id=movie["id"], m_title=movie["title"], m_genre=movie["genre"],
+                                       m_price=movie["price"], m_duration=movie["duration"], m_rating=movie["rating"],
+                                       m_status=movie["status"], m_description=movie["description"], m_poster=movie["poster"]:
+                        update_modal(self, m_id, m_title, m_genre, m_price, m_duration, m_rating, m_status, m_description, m_poster)
                     )
                     upd_btn.grid(row=0, column=1, padx=2, sticky="nsew")
-
-                else:
-                    # default mapping: ID, Movie, Genre
-                    key = header.lower()
-                    if key == "movie":
-                        key = "title"
-                    lbl = ctk.CTkLabel(self.tableCard, text=movie[key],
-                                       font=("Book Antiqua", 12), text_color="#3E5F44")
-                    lbl.grid(row=r, column=c, sticky="nsew", padx=10, ipady=10)
 
     def next_page(self):
         """Go to the next page of movies."""

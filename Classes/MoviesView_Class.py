@@ -1,28 +1,12 @@
-from Classes.MoviesCntrl_Class import Movies
+from Classes.MoviesCntrl_Class import MoviesCntrl
 
-class MoviesView(Movies):
+class MoviesView:
+    def __init__(self):
+        self.controller = MoviesCntrl()
+
     def getMoviesThisMonth(self):
         """
-        Fetch available movies created this month (limit 4).
+        Fetch available movies with showtimes in the current month (limit 4).
         Returns a list of dictionaries.
         """
-        movies = self._Get_movies()
-
-        if not movies:
-            return []
-
-        result = []
-        for movie in movies:
-            result.append({
-                "id": movie["movie_id"],
-                "title": movie["title"],
-                "genre": movie["genre"],
-                "price": movie['price'],
-                "duration": movie['duration'],
-                "date": movie["release_date"].strftime("%B %d, %Y"),
-                "rating": movie["rating"],
-                "description": movie["description"],
-                "poster": movie["poster_path"],
-                "status": movie["status"],
-            })
-        return result
+        return self.controller.get_movies_this_month(limit=4)

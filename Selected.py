@@ -12,220 +12,233 @@ class SelectedScreen(ctk.CTkFrame):
         self.rowconfigure(0, weight=0)
         self.rowconfigure(1, weight=2)
 
-        # ========== UPPER FRAME ==========
-        upperFrame = ctk.CTkFrame(self, fg_color="#E8FFD7")  # Light green background
-        upperFrame.grid(row=0, column=0, sticky="nsew")
-        upperFrame.columnconfigure(0, weight=1)
+        # ========== HEADER FRAME ==========
+        headerFrame = ctk.CTkFrame(self, fg_color="#E8FFD7")
+        headerFrame.grid(row=0, column=0, sticky="ew", padx=20, pady=15)
+        headerFrame.columnconfigure(0, weight=1)
 
         backButton = ctk.CTkButton(
-            upperFrame,
-            text="← BACK TO MENU",
-            font=("Book Antiqua", 20),
+            headerFrame,
+            text="Return to Menu",
+            font=("Arial", 16, "bold"),
             text_color="#3E5F44",  # Dark green text
             fg_color="#E8FFD7",  # Light green background
             hover_color="#5E936C",  # Hover green
-            corner_radius=0,
+            corner_radius=8,
             command=lambda: controller.show_frame("HomePage")
         )
-        backButton.grid(row=0, column=0, sticky="sw", padx=15, pady=30)
+        backButton.grid(row=0, column=0, sticky="w")
 
-        # ========== MAIN FRAME ==========
-        mainFrame = ctk.CTkFrame(self, fg_color="#E8FFD7")  # Light green background
-        mainFrame.grid(row=1, column=0, sticky="nsew", padx=(20, 0))
-        mainFrame.columnconfigure(0, weight=1)
-        mainFrame.columnconfigure(1, weight=2)
+        # ========== MAIN CONTENT FRAME ==========
+        mainFrame = ctk.CTkFrame(self, fg_color="#E8FFD7")
+        mainFrame.grid(row=1, column=0, sticky="nsew", padx=20, pady=(0, 20))
+        mainFrame.columnconfigure(0, weight=1)  # Poster
+        mainFrame.columnconfigure(1, weight=2)  # Info
 
         # Poster Image with Shadow
         imgpath = os.path.join(os.path.dirname(__file__), "Assets", "PetSematary.png")
-        img = Image.open(imgpath).resize((400, 600), Image.LANCZOS)
-        self.img = ctk.CTkImage(light_image=img, dark_image=img, size=(400, 600))
+        try:
+            img = Image.open(imgpath).resize((400, 600), Image.LANCZOS)
+            self.img = ctk.CTkImage(light_image=img, dark_image=img, size=(400, 600))
+        except Exception:
+            self.img = ctk.CTkImage(light_image=Image.new("RGB", (400, 600), "#E8FFD7"), size=(400, 600))
 
-        # Create shadow frame for poster
         shadow_frame = ctk.CTkFrame(
             mainFrame,
-            fg_color="#E8FFD7",  # Match background
-            border_color="#3E5F44",  # Dark green for shadow
-            border_width=2,
-            corner_radius=8
+            fg_color="#E8FFD7",
+            border_color="#3E5F44",
+            border_width=3,
+            corner_radius=12
         )
-        shadow_frame.grid(row=0, column=0, sticky="n", padx=(12, 10), pady=(12, 10))
+        shadow_frame.grid(row=0, column=0, sticky="n", padx=15, pady=15)
 
         imgLabel = ctk.CTkLabel(
             shadow_frame,
             image=self.img,
             text="",
-            fg_color="#E8FFD7"  # Light green to match background
+            fg_color="#E8FFD7"
         )
-        imgLabel.pack(padx=4, pady=4)  # Padding inside shadow frame
+        imgLabel.pack(padx=10, pady=10)
 
         # Info Frame
-        infoFrame = ctk.CTkFrame(mainFrame, fg_color="#E8FFD7")  # Light green background
-        infoFrame.grid(row=0, column=1, sticky="nsew", padx=10)
+        infoFrame = ctk.CTkFrame(mainFrame, fg_color="#E8FFD7")
+        infoFrame.grid(row=0, column=1, sticky="nsew", padx=(20, 0))
         infoFrame.columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
             infoFrame,
             text="Pet Sematary",
-            font=("Book Antiqua", 40),
-            text_color="#3E5F44",  # Dark green text
+            font=("Arial", 28, "bold"),
+            text_color="#3E5F44",
             anchor="w"
-        ).grid(row=0, column=0, sticky="new")
+        ).grid(row=0, column=0, sticky="w", pady=(0, 15))
 
         ctk.CTkLabel(
             infoFrame,
             text=(
-                "Richard, an archaeologist and professor, and his wife, Jules, "
-                "live with their young son Owen on Richard's deceased father's isolated farm on the moors. "
-                "Owen, an asthmatic child, tells his mother...."
+                "Dr. Richard, a distinguished archaeologist and professor, resides with his spouse, "
+                "Dr. Jules, and their young son, Owen, on the secluded family estate inherited from "
+                "Richard's late father. Owen, a child with asthma, confides in his mother..."
             ),
-            font=("Book Antiqua", 12),
-            text_color="#3E5F44",  # Dark green text
-            anchor="nw",
+            font=("Arial", 12),
+            text_color="#3E5F44",
+            anchor="w",
             justify="left",
             wraplength=500
-        ).grid(row=1, column=0, sticky="new")
+        ).grid(row=1, column=0, sticky="w", pady=(0, 20))
 
-        # ========== SEATS ==========
-        seatFrame = ctk.CTkFrame(infoFrame, fg_color="#E8FFD7")  # Light green background
-        seatFrame.grid(row=2, column=0, sticky="nsew", pady=(20, 0))
+        # ========== SEATING SECTION ==========
+        seatSection = ctk.CTkFrame(infoFrame, fg_color="#E8FFD7")
+        seatSection.grid(row=2, column=0, sticky="nsew", pady=(20, 0))
+        seatSection.columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
-            seatFrame,
-            text="AVAILABLE SEATS",
-            font=("Book Antiqua", 12),
-            text_color="#3E5F44",  # Dark green text
+            seatSection,
+            text="Available Seating",
+            font=("Arial", 14, "bold"),
+            text_color="#3E5F44",
             anchor="w"
-        ).pack(anchor="w", padx=(0, 30))
+        ).grid(row=0, column=0, sticky="w", padx=5, pady=5)
 
-        seatFrameCon = ctk.CTkFrame(seatFrame, fg_color="#E8FFD7")  # Light green background
-        seatFrameCon.pack(anchor="w")
+        seatContainer = ctk.CTkFrame(seatSection, fg_color="#E8FFD7")
+        seatContainer.grid(row=1, column=0, sticky="w")
+        seatContainer.columnconfigure(tuple(range(10)), weight=1)
 
         self.seat_buttons = []
-        max_per_row = 10  # Number of seats
-
-        for i, seat in enumerate([
-            "A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10",
-            "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10",
-        ]):
-            row = i // max_per_row
-            col = i % max_per_row
-
+        seats = ["A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10",
+                 "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10"]
+        for i, seat in enumerate(seats):
+            row = i // 10
+            col = i % 10
             btn = ctk.CTkButton(
-                seatFrameCon,
+                seatContainer,
                 text=seat,
-                font=("Book Antiqua", 14),
-                text_color="#3E5F44",  # Dark green text
-                fg_color="#93DA97",  # Secondary green background
-                hover_color="#5E936C",  # Hover green
-                corner_radius=5,
-                width=60,
+                font=("Arial", 12, "bold"),
+                text_color="#3E5F44",
+                fg_color="#93DA97",
+                hover_color="#5E936C",
+                corner_radius=8,
+                width=50,
+                height=40,
                 command=lambda b=seat: self.select_option(b, "seat")
             )
-            btn.grid(row=row, column=col, padx=5, pady=5, sticky="w")
+            btn.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
             self.seat_buttons.append(btn)
 
-        # ========== TIME ==========
-        timeFrame = ctk.CTkFrame(infoFrame, fg_color="#E8FFD7")  # Light green background
-        timeFrame.grid(row=3, column=0, sticky="nsew", pady=(20, 0))
+        # ========== TIME AND GATE SECTION ==========
+        timeGateSection = ctk.CTkFrame(infoFrame, fg_color="#E8FFD7")
+        timeGateSection.grid(row=3, column=0, sticky="nsew", pady=(20, 0))
+        timeGateSection.columnconfigure(0, weight=1)  # Time
+        timeGateSection.columnconfigure(1, weight=1)  # Gate
+
+        # Time Subsection
+        timeSubsection = ctk.CTkFrame(timeGateSection, fg_color="#E8FFD7")
+        timeSubsection.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
+        timeSubsection.columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
-            timeFrame,
-            text="TIME",
-            font=("Book Antiqua", 12),
-            text_color="#3E5F44",  # Dark green text
+            timeSubsection,
+            text="Showtimes",
+            font=("Arial", 14, "bold"),
+            text_color="#3E5F44",
             anchor="w"
-        ).pack(anchor="w", padx=(0, 30))
+        ).grid(row=0, column=0, sticky="w", padx=5, pady=5)
 
-        timeFrameCon = ctk.CTkFrame(timeFrame, fg_color="#E8FFD7")  # Light green background
-        timeFrameCon.pack(anchor="w")
+        timeContainer = ctk.CTkFrame(timeSubsection, fg_color="#E8FFD7")
+        timeContainer.grid(row=1, column=0, sticky="w")
+        timeContainer.columnconfigure(tuple(range(2)), weight=1)
 
         self.time_buttons = []
-        max_per_row = 2
-
-        for i, t in enumerate(["1:00 - 2:00", "2:00 - 3:00", "3:00 - 4:00", "4:00 - 5:00"]):
-            row = i // max_per_row
-            col = i % max_per_row
-
+        times = ["1:00 PM - 2:00 PM", "2:00 PM - 3:00 PM", "3:00 PM - 4:00 PM", "4:00 PM - 5:00 PM"]
+        for i, t in enumerate(times):
+            row = i // 2
+            col = i % 2
             btn = ctk.CTkButton(
-                timeFrameCon,
+                timeContainer,
                 text=t,
-                font=("Book Antiqua", 14),
-                text_color="#3E5F44",  # Dark green text
-                fg_color="#93DA97",  # Secondary green background
-                hover_color="#5E936C",  # Hover green
-                corner_radius=5,
-                width=120,
+                font=("Arial", 12, "bold"),
+                text_color="#3E5F44",
+                fg_color="#93DA97",
+                hover_color="#5E936C",
+                corner_radius=8,
+                width=150,
+                height=40,
                 command=lambda b=t: self.select_option(b, "time")
             )
-            btn.grid(row=row, column=col, padx=5, pady=5, sticky="w")
+            btn.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
             self.time_buttons.append(btn)
 
-        # ========== GATE ==========
-        gateFrame = ctk.CTkFrame(infoFrame, fg_color="#E8FFD7")  # Light green background
-        gateFrame.grid(row=4, column=0, sticky="nsew", pady=(20, 0))
+        # Gate Subsection
+        gateSubsection = ctk.CTkFrame(timeGateSection, fg_color="#E8FFD7")
+        gateSubsection.grid(row=0, column=1, sticky="nsew", padx=(10, 0))
+        gateSubsection.columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
-            gateFrame,
-            text="GATE",
-            font=("Book Antiqua", 12),
-            text_color="#3E5F44",  # Dark green text
+            gateSubsection,
+            text="Entry Gate",
+            font=("Arial", 14, "bold"),
+            text_color="#3E5F44",
             anchor="w"
-        ).pack(anchor="w", padx=(0, 30))
+        ).grid(row=0, column=0, sticky="w", padx=5, pady=5)
 
-        gateFrameCon = ctk.CTkFrame(gateFrame, fg_color="#E8FFD7")  # Light green background
-        gateFrameCon.pack(anchor="w")
+        gateContainer = ctk.CTkFrame(gateSubsection, fg_color="#E8FFD7")
+        gateContainer.grid(row=1, column=0, sticky="w")
+        gateContainer.columnconfigure(tuple(range(2)), weight=1)
 
         self.gate_buttons = []
-        max_per_row = 2  # Number of gates per row
-
-        for i, g in enumerate(["Gate 1", "Gate 2", "Gate 3", "Gate 4"]):
-            row = i // max_per_row
-            col = i % max_per_row
-
+        gates = ["Gate 1", "Gate 2", "Gate 3", "Gate 4"]
+        for i, g in enumerate(gates):
+            row = i // 2
+            col = i % 2
             btn = ctk.CTkButton(
-                gateFrameCon,
+                gateContainer,
                 text=g,
-                font=("Book Antiqua", 14),
-                text_color="#3E5F44",  # Dark green text
-                fg_color="#93DA97",  # Secondary green background
-                hover_color="#5E936C",  # Hover green
-                corner_radius=5,
-                width=100,
+                font=("Arial", 12, "bold"),
+                text_color="#3E5F44",
+                fg_color="#93DA97",
+                hover_color="#5E936C",
+                corner_radius=8,
+                width=120,
+                height=40,
                 command=lambda b=g: self.select_option(b, "gate")
             )
-            btn.grid(row=row, column=col, padx=5, pady=5, sticky="w")
+            btn.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
             self.gate_buttons.append(btn)
 
-        # ========== PRICE ==========
+        # ========== PRICING SECTION ==========
+        pricingFrame = ctk.CTkFrame(infoFrame, fg_color="#E8FFD7")
+        pricingFrame.grid(row=4, column=0, sticky="w", pady=(20, 0))
+
         ctk.CTkLabel(
-            infoFrame,
-            text="₱300.00",  # Updated to peso symbol
-            font=("Book Antiqua", 30),
-            text_color="#3E5F44"  # Dark green text
-        ).grid(row=5, column=0, sticky="w", pady=20)
+            pricingFrame,
+            text="Ticket Price: ₱300.00",
+            font=("Arial", 18, "bold"),
+            text_color="#3E5F44"
+        ).pack(anchor="w", padx=5, pady=5)
 
         # ========== PURCHASE BUTTON ==========
-        ctk.CTkButton(
+        purchaseButton = ctk.CTkButton(
             infoFrame,
-            text="Place Order",
-            font=("Book Antiqua", 14),
-            text_color="#E8FFD7",  # Light green text
-            fg_color="#3E5F44",  # Dark green button
-            hover_color="#5E936C",  # Hover green
-            corner_radius=8,
-            width=200,
+            text="Purchase Tickets",
+            font=("Arial", 16, "bold"),
+            text_color="#E8FFD7",
+            fg_color="#3E5F44",
+            hover_color="#5E936C",
+            corner_radius=10,
+            width=250,
             height=50,
             command=self.open_modal
-        ).grid(row=6, column=0, sticky="w", pady=10)
+        )
+        purchaseButton.grid(row=5, column=0, sticky="w", pady=(20, 10))
 
         # ========== ORDER MODAL ==========
         self.orderFrame = ctk.CTkFrame(
             self,
-            fg_color="#E8FFD7",  # Light green background
-            width=250,
-            corner_radius=10,
+            fg_color="#E8FFD7",
+            width=300,
+            corner_radius=12,
         )
-        self.orderFrame.grid(row=0, column=1, rowspan=2, sticky="ns", padx=5)
+        self.orderFrame.grid(row=0, column=1, rowspan=2, sticky="ns", padx=20)
         self.orderFrame.grid_propagate(False)
         self.orderFrame.grid_remove()
 
@@ -233,7 +246,6 @@ class SelectedScreen(ctk.CTkFrame):
         self.selected = {"seat": None, "time": None, "gate": None}
 
     def select_option(self, value, group):
-        # Reset group
         button_list = {
             "seat": self.seat_buttons,
             "time": self.time_buttons,
@@ -241,67 +253,62 @@ class SelectedScreen(ctk.CTkFrame):
         }[group]
 
         for btn in button_list:
-            btn.configure(fg_color="#93DA97", text_color="#3E5F44")  # Reset to secondary green
+            btn.configure(fg_color="#93DA97", text_color="#3E5F44")
 
-        # Highlight selected
         for btn in button_list:
             if btn.cget("text") == value:
-                btn.configure(fg_color="#3E5F44", text_color="#E8FFD7")  # Dark green with light green text
+                btn.configure(fg_color="#3E5F44", text_color="#E8FFD7")
 
-        # Store value
         self.selected[group] = value
 
     def open_modal(self):
-        # If modal is already visible → hide it
         if self.orderFrame.winfo_ismapped():
             self.orderFrame.grid_remove()
             return
 
-        # Else → show modal
         self.orderFrame.grid()
         for widget in self.orderFrame.winfo_children():
             widget.destroy()
 
         ctk.CTkLabel(
             self.orderFrame,
-            text="Order Status",
-            font=("Book Antiqua", 24),
-            text_color="#3E5F44",  # Dark green text
+            text="Order Confirmation",
+            font=("Arial", 20, "bold"),
+            text_color="#3E5F44",
             anchor="nw"
-        ).pack(pady=(25, 10), padx=10, anchor="w")
+        ).pack(pady=(20, 10), padx=20, anchor="w")
 
         ctk.CTkLabel(
             self.orderFrame,
-            text=f"Tickets added\nSeat: {self.selected['seat']}\nTime: {self.selected['time']}\nGate: {self.selected['gate']}",
-            font=("Book Antiqua", 16),
-            text_color="#3E5F44",  # Dark green text
+            text=f"Selected Options:\nSeat: {self.selected['seat']}\nShowtime: {self.selected['time']}\nEntry Gate: {self.selected['gate']}",
+            font=("Arial", 14),
+            text_color="#3E5F44",
             anchor="w",
             justify="left"
-        ).pack(pady=(10, 5), padx=20, anchor="w")
+        ).pack(pady=(10, 15), padx=20, anchor="w")
 
-        # Ticket placeholder
         ctk.CTkFrame(
             self.orderFrame,
-            fg_color="#93DA97",  # Secondary green for ticket placeholder
-            height=100
+            fg_color="#93DA97",
+            height=120
         ).pack(fill="x", padx=20, pady=15)
 
-        # Total and Checkout
         ctk.CTkLabel(
             self.orderFrame,
-            text="Total: ₱300.00",  # Updated to peso symbol
-            font=("Book Antiqua", 18),
-            text_color="#3E5F44",  # Dark green text
+            text="Total Amount: ₱300.00",
+            font=("Arial", 16, "bold"),
+            text_color="#3E5F44",
             anchor="w"
-        ).pack(pady=(10, 5), padx=20, anchor="w")
+        ).pack(pady=(10, 15), padx=20, anchor="w")
 
         ctk.CTkButton(
             self.orderFrame,
-            text="Checkout",
-            font=("Book Antiqua", 12),
-            text_color="#E8FFD7",  # Light green text
-            fg_color="#3E5F44",  # Dark green button
-            hover_color="#5E936C",  # Hover green
-            width=100,
+            text="Proceed to Checkout",
+            font=("Arial", 14, "bold"),
+            text_color="#E8FFD7",
+            fg_color="#3E5F44",
+            hover_color="#5E936C",
+            width=150,
+            height=40,
             command=lambda: self.controller.show_frame("OrderCodeScreen")
         ).pack(pady=20)

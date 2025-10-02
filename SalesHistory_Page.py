@@ -63,7 +63,7 @@ class SalesHistoryPage(ctk.CTkFrame):
         # ---- Table card ---- #
         tableCard = ctk.CTkFrame(mainFrame, fg_color="#93DA97", corner_radius=12)
         tableCard.grid(row=1, column=0, sticky="nsew", padx=20, pady=(0, 10))
-        tableCard.columnconfigure(tuple(range(8)), weight=1)
+        tableCard.columnconfigure(tuple(range(7)), weight=1)
 
         # Top bar inside table card
         cardTop = ctk.CTkFrame(tableCard, fg_color="#93DA97")
@@ -78,16 +78,8 @@ class SalesHistoryPage(ctk.CTkFrame):
         self.search_entry.grid(row=0, column=1, sticky="e", padx=10)
         self.search_entry.bind("<KeyRelease>", self.handle_search)  # Bind search event
 
-        addBtn = ctk.CTkButton(cardTop, text="Add New",
-                               font=("Book Antiqua", 12, "bold"),
-                               fg_color="#3E5F44", text_color="#E8FFD7",
-                               hover_color="#5E936C", corner_radius=6,
-                               height=30,
-                               command=lambda: register_modal(self, controller))
-        addBtn.grid(row=0, column=2, sticky="e")
-
         # Table headers
-        headers = ["ID", "Movie", "Genre", "Price", "Duration", "Rating", "Status", "Action"]
+        headers = ["ID", "Movie", "Genre", "Price", "Duration", "Rating", "Status"]
         self.headers = headers
         for i, h in enumerate(headers):
             lbl = ctk.CTkLabel(tableCard,
@@ -210,35 +202,6 @@ class SalesHistoryPage(ctk.CTkFrame):
                     lbl = ctk.CTkLabel(self.tableCard, text=movie["rating"],
                                        font=("Book Antiqua", 12), text_color="#3E5F44")
                     lbl.grid(row=r, column=c, sticky="nsew", padx=10, ipady=10)
-
-                elif header == "Action":
-                    action_frame = ctk.CTkFrame(self.tableCard, fg_color="#93DA97")
-                    action_frame.grid(row=r, column=c, sticky="nsew", padx=5, pady=8)
-                    action_frame.columnconfigure((0, 1), weight=1)
-
-                    # Delete Button
-                    del_btn = ctk.CTkButton(
-                        action_frame, text="🗑", width=30, height=30,
-                        fg_color="#ef4444", hover_color="#dc2626",
-                        command=lambda m_id=movie["id"], m_title=movie["title"]: delete_modal(self, m_id, m_title)
-                    )
-                    del_btn.grid(row=0, column=0, padx=2, sticky="nsew")
-
-                    # Update Button
-                    upd_btn = ctk.CTkButton(
-                        action_frame, text="🖋", width=30, height=30,
-                        fg_color="#22c55e", hover_color="#16a34a",
-                        command=lambda
-                            m_id=movie["id"], m_title=movie["title"], m_genre=movie["genre"],
-                            m_price=movie["price"], m_duration=movie["duration"], m_rating=movie["rating"],
-                            m_status=movie["status"], m_description=movie["description"], m_poster=movie["poster"]:
-                        update_modal(
-                            self, m_id, m_title, m_genre, m_price,
-                            m_duration, m_rating, m_status,
-                            m_description, m_poster
-                        )
-                    )
-                    upd_btn.grid(row=0, column=1, padx=2, sticky="nsew")
 
                 else:
                     # default mapping: ID, Movie, Genre
