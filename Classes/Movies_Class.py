@@ -2,56 +2,30 @@ from Includes.Dbh import Dbh
 from datetime import datetime, timedelta
 
 class Movies(Dbh):
-    def get_all_movies(self):
-        """Fetch all movies from the Movies table."""
+    def get_movies_this_month(self, limit=None):
+        """Fetch movies with showtimes in the current month, optionally limited."""
         conn = self._connection()
         if not conn:
             print("Error connecting to database!...Parent Error(Movies)")
             return []
 
         cursor = conn.cursor(dictionary=True)
-        query = """
-            SELECT movie_id, title, genre, price, duration, release_date, rating, description, poster_path, status
-            FROM Movies
-            ORDER BY release_date
-        """
-
-        try:
-            cursor.execute(query)
-            results = cursor.fetchall()
-            return results if results else []
-        except Exception as e:
-            print(f"Error fetching movies: {e}")
-            return []
-        finally:
-            cursor.close()
-            conn.close()
-
-    def get_movies_this_month(self, limit=4):
-        """Fetch movies with showtimes in the current month, limited to the specified number."""
-        conn = self._connection()
-        if not conn:
-            print("Error connecting to database!...Parent Error(Movies)")
-            return []
-
-        cursor = conn.cursor(dictionary=True)
-        # Get the start and end of the current month
-        current_date = datetime(2025, 10, 3, 1, 32)  # Current date: 01:32 AM PST, Oct 03, 2025
-        start_of_month = current_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        next_month = (start_of_month.replace(month=start_of_month.month % 12 + 1)
-                     if start_of_month.month < 12 else start_of_month.replace(year=start_of_month.year + 1, month=1))
-        end_of_month = next_month - timedelta(seconds=1)
+        start_date = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        end_date = (start_date + timedelta(days=31)).replace(day=1)
 
         query = """
-            SELECT DISTINCT m.movie_id, m.title, m.genre, m.price, m.duration, m.release_date, 
-                           m.rating, m.description, m.poster_path, m.status
+            SELECT m.movie_id, m.title, m.genre, m.price, m.duration, m.release_date, 
+                   m.rating, m.description, m.poster_path, m.status
             FROM Movies m
             JOIN Showtimes s ON m.movie_id = s.movie_id
-            WHERE s.start_time >= %s AND s.start_time <= %s
-            ORDER BY m.release_date
-            LIMIT %s
+            WHERE s.start_time >= %s AND s.start_time < %s
+            GROUP BY m.movie_id
         """
-        values = (start_of_month, end_of_month, limit)
+        values = (start_date, end_date)
+
+        if limit is not None:
+            query += " LIMIT %s"
+            values = values + (limit,)
 
         try:
             cursor.execute(query, values)
@@ -59,6 +33,39 @@ class Movies(Dbh):
             return results if results else []
         except Exception as e:
             print(f"Error fetching movies for this month: {e}")
+            return []
+        finally:
+            cursor.close()
+            conn.close()
+
+    def get_available_showtimes(self, movie_id, date=None):
+        """Fetch available showtimes for a movie on a specific date (or today)."""
+        conn = self._connection()
+        if not conn:
+            print("Error connecting to database!...Parent Error(Movies)")
+            return []
+
+        cursor = conn.cursor(dictionary=True)
+        if date is None:
+            date = datetime.now().date()
+        start_of_day = datetime.combine(date, datetime.min.time())
+        end_of_day = start_of_day + timedelta(days=1) - timedelta(seconds=1)
+
+        query = """
+            SELECT s.showtime_id, s.gate_id, g.name AS gate_name, s.start_time, s.end_time, s.available_seats
+            FROM Showtimes s
+            JOIN CinemaGates g ON s.gate_id = g.gate_id
+            WHERE s.movie_id = %s AND s.start_time >= %s AND s.start_time <= %s
+            ORDER BY s.start_time
+        """
+        values = (movie_id, start_of_day, end_of_day)
+
+        try:
+            cursor.execute(query, values)
+            results = cursor.fetchall()
+            return results if results else []
+        except Exception as e:
+            print(f"Error fetching showtimes for movie ID {movie_id}: {e}")
             return []
         finally:
             cursor.close()
@@ -157,6 +164,31 @@ class Movies(Dbh):
             cursor.close()
             conn.close()
 
+    def _GetMovies(self):
+        """Fetch all movies from the Movies table."""
+        conn = self._connection()
+        if not conn:
+            print("Error connecting to database!...Parent Error(Movies)")
+            return []
+
+        cursor = conn.cursor(dictionary=True)
+        query = """
+            SELECT movie_id, title, genre, price, duration, release_date, rating, description, poster_path, status
+            FROM Movies
+            ORDER BY release_date
+        """
+
+        try:
+            cursor.execute(query)
+            results = cursor.fetchall()
+            return results if results else []
+        except Exception as e:
+            print(f"Error fetching movies: {e}")
+            return []
+        finally:
+            cursor.close()
+            conn.close()
+
     def _InsertShowtime(self, movie_id, gate_id, start_time, end_time, available_seats):
         """Insert a showtime record into the Showtimes table."""
         conn = self._connection()
@@ -238,7 +270,7 @@ class Movies(Dbh):
             FROM Showtimes 
             WHERE gate_id = %s 
             AND start_time >= %s 
-            AND start_time <= %s
+            AND start_time < %s
         """
         values = (gate_id, start_date, end_date)
 
@@ -248,6 +280,105 @@ class Movies(Dbh):
             return count == 0
         except Exception as e:
             print(f"Error checking gate availability: {e}")
+            return False
+        finally:
+            cursor.close()
+            conn.close()
+
+    def _IsGateValid(self, gate_id):
+        """Check if a gate ID is valid."""
+        conn = self._connection()
+        if not conn:
+            print("Error connecting to database!...Parent Error(Movies)")
+            return False
+
+        cursor = conn.cursor()
+        query = "SELECT COUNT(*) FROM CinemaGates WHERE gate_id = %s"
+        values = (gate_id,)
+
+        try:
+            cursor.execute(query, values)
+            count = cursor.fetchone()[0]
+            return count > 0
+        except Exception as e:
+            print(f"Error validating gate ID {gate_id}: {e}")
+            return False
+        finally:
+            cursor.close()
+            conn.close()
+
+    def get_available_gates(self):
+        """Fetch available gates."""
+        conn = self._connection()
+        if not conn:
+            print("Error connecting to database!...Parent Error(Movies)")
+            return []
+
+        cursor = conn.cursor(dictionary=True)
+        query = "SELECT gate_id, name, total_seat_capacity FROM CinemaGates ORDER BY gate_id"
+
+        try:
+            cursor.execute(query)
+            results = cursor.fetchall()
+            return results if results else []
+        except Exception as e:
+            print(f"Error fetching gates: {e}")
+            return []
+        finally:
+            cursor.close()
+            conn.close()
+
+    def check_seat_availability(self, showtime_id, seat):
+        """Check if a seat is available for a showtime."""
+        conn = self._connection()
+        if not conn:
+            print("Error connecting to database!...Parent Error(Movies)")
+            return False
+
+        cursor = conn.cursor()
+        query = """
+            SELECT COUNT(*) FROM Tickets
+            WHERE showtime_id = %s AND seat = %s
+        """
+        values = (showtime_id, seat)
+
+        try:
+            cursor.execute(query, values)
+            count = cursor.fetchone()[0]
+            return count == 0
+        except Exception as e:
+            print(f"Error checking seat availability for showtime ID {showtime_id}: {e}")
+            return False
+        finally:
+            cursor.close()
+            conn.close()
+
+    def book_seat(self, showtime_id, seat):
+        """Book a seat for a showtime."""
+        conn = self._connection()
+        if not conn:
+            print("Error connecting to database!...Parent Error(Movies)")
+            return False
+
+        cursor = conn.cursor()
+        try:
+            query = """
+                INSERT INTO Tickets (showtime_id, seat, purchase_time)
+                VALUES (%s, %s, %s)
+            """
+            values = (showtime_id, seat, datetime.now())
+            cursor.execute(query, values)
+
+            query = """
+                UPDATE Showtimes SET available_seats = available_seats - 1
+                WHERE showtime_id = %s AND available_seats > 0
+            """
+            cursor.execute(query, (showtime_id,))
+            conn.commit()
+            return cursor.rowcount > 0
+        except Exception as e:
+            print(f"Error booking seat for showtime ID {showtime_id}: {e}")
+            conn.rollback()
             return False
         finally:
             cursor.close()

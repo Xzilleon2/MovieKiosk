@@ -36,7 +36,7 @@ def delete_modal(parent, movie_id, movie_title):
 
     def on_delete():
         moviescntrl = MoviesCntrl(movie_id=movie_id)
-        ok = moviescntrl.deleteMovie()
+        ok = moviescntrl.deleteMovie(movie_id)
 
         if ok:
             messagebox.showinfo("Success", f"Movie '{movie_title}' deleted successfully!")

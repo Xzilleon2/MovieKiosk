@@ -1,20 +1,25 @@
 import customtkinter as ctk
 from Classes.MoviesCntrl_Class import MoviesCntrl
-from Classes.Movies_Class import Movies
 from tkinter import filedialog, messagebox
 from PIL import Image
 import os
 import shutil
-from datetime import datetime, timedelta
+from datetime import datetime
 
-def update_modal(self, movie_id, title, genre, price, duration, rating, status, description, poster):
+class HiddenScrollbarFrame(ctk.CTkScrollableFrame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+        # Hide scrollbar by setting its width to 0
+        self._scrollbar.configure(width=0)
+
+def update_modal(self, movie_id, title, genre, price, duration, rating, status, description, poster, release_date=None):
     modal = ctk.CTkToplevel(self)
     modal.title("Update Movie")
     modal.configure(fg_color="#E8FFD7")
     modal.transient(self)
     modal.grab_set()
 
-    w, h = 520, 720
+    w, h = 520, 760
     parent_x = self.winfo_rootx()
     parent_y = self.winfo_rooty()
     parent_w = self.winfo_width()
@@ -29,7 +34,8 @@ def update_modal(self, movie_id, title, genre, price, duration, rating, status, 
     card.grid_rowconfigure(1, weight=0)
     card.grid_columnconfigure(0, weight=1)
 
-    content = ctk.CTkFrame(card, fg_color="#93DA97")
+    # Use HiddenScrollbarFrame instead of CTkFrame
+    content = HiddenScrollbarFrame(card, fg_color="#93DA97", scrollbar_button_color="#93DA97")
     content.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
 
     label_style = {"font": ("Book Antiqua", 12), "text_color": "#3E5F44", "anchor": "w"}
@@ -48,7 +54,7 @@ def update_modal(self, movie_id, title, genre, price, duration, rating, status, 
                                   fg_color="#E8FFD7", corner_radius=6)
     poster_preview.pack(pady=5)
 
-    assets_dir = os.path.join(os.getcwd(), "Assets", "Posters")
+    assets_dir = os.path.join(os.path.dirname(__file__), "Assets", "Posters")
     os.makedirs(assets_dir, exist_ok=True)
     poster_filename = {"value": poster}
 
@@ -72,12 +78,11 @@ def update_modal(self, movie_id, title, genre, price, duration, rating, status, 
         if file:
             fname = os.path.basename(file)
             dest = os.path.join(assets_dir, fname)
-            shutil.copy(file, dest)
-            poster_filename["value"] = fname
             try:
-                img = Image.open(file)
-                img.thumbnail((180, 200))
-                ctk_img = ctk.CTkImage(light_image=img, size=(180, 200))
+                shutil.copy(file, dest)
+                poster_filename["value"] = fname
+                img = Image.open(dest).thumbnail((180, 200))
+                ctk_img = ctk.CTkImage(light_image=Image.open(dest), size=(180, 200))
                 poster_preview.configure(image=ctk_img, text="")
                 poster_preview.image = ctk_img
             except Exception as e:
@@ -91,6 +96,11 @@ def update_modal(self, movie_id, title, genre, price, duration, rating, status, 
     title_entry = ctk.CTkEntry(content, **entry_style)
     title_entry.pack(fill="x", padx=10, pady=5)
     title_entry.insert(0, title)
+
+    ctk.CTkLabel(content, text="Release Date (YYYY-MM-DD)", **label_style).pack(fill="x", padx=10, pady=(10, 0))
+    release_date_entry = ctk.CTkEntry(content, **entry_style, placeholder_text="e.g., 2025-10-01")
+    release_date_entry.pack(fill="x", padx=10, pady=5)
+    release_date_entry.insert(0, release_date or datetime.now().strftime("%Y-%m-%d"))
 
     row1 = ctk.CTkFrame(content, fg_color="#93DA97")
     row1.pack(fill="x", padx=10, pady=5)
@@ -134,11 +144,14 @@ def update_modal(self, movie_id, title, genre, price, duration, rating, status, 
     status_combobox.grid(row=1, column=2, padx=5, pady=5, sticky="ew")
     status_combobox.set(status or "Available")
 
+    movie_ctrl = MoviesCntrl()
+    gates = movie_ctrl.get_available_gates()
+    gate_values = [f"Gate {g['gate_id']} ({g['name']})" for g in gates] or ["No gates available"]
     gate_label = ctk.CTkLabel(row2, text="Cinema Gate", **label_style)
     gate_label.grid(row=0, column=3, sticky="w", padx=5, pady=(0, 2))
-    gate_combobox = ctk.CTkComboBox(row2, values=["Gate 1", "Gate 2", "Gate 3", "Gate 4"], **combo_style, width=150)
+    gate_combobox = ctk.CTkComboBox(row2, values=gate_values, **combo_style, width=150)
     gate_combobox.grid(row=1, column=3, padx=5, pady=5, sticky="ew")
-    gate_combobox.set("Gate 1")
+    gate_combobox.set(gate_values[0] if gate_values else "No gates available")
 
     ctk.CTkLabel(content, text="Description", **label_style).pack(fill="x", padx=10, pady=(10, 0))
     description_text = ctk.CTkTextbox(content, height=140, fg_color="#E8FFD7", text_color="#3E5F44",
@@ -152,6 +165,7 @@ def update_modal(self, movie_id, title, genre, price, duration, rating, status, 
 
     def on_update():
         updated_title = title_entry.get().strip()
+        updated_release_date = release_date_entry.get().strip()
         updated_genre = genre_combobox.get().strip()
         updated_price = price_entry.get().strip()
         updated_duration = duration_entry.get().strip()
@@ -159,7 +173,7 @@ def update_modal(self, movie_id, title, genre, price, duration, rating, status, 
         updated_description = description_text.get("1.0", "end-1c").strip()
         updated_poster = poster_filename["value"]
         updated_status = status_combobox.get().strip()
-        updated_gate = gate_combobox.get().strip().split()[1]
+        updated_gate = gate_combobox.get().split(" ")[1].strip("()") if gate_combobox.get() != "No gates available" else None
 
         errors = {}
         try:
@@ -174,6 +188,13 @@ def update_modal(self, movie_id, title, genre, price, duration, rating, status, 
                 errors["duration"] = "Duration must be a positive number."
         except ValueError:
             errors["duration"] = "Duration must be a number."
+        try:
+            if updated_release_date:
+                datetime.strptime(updated_release_date, "%Y-%m-%d")
+            else:
+                errors["release_date"] = "Release date is required."
+        except ValueError:
+            errors["release_date"] = "Release date must be in YYYY-MM-DD format."
         if not updated_title:
             errors["title"] = "Title is required."
         if not updated_genre:
@@ -186,6 +207,8 @@ def update_modal(self, movie_id, title, genre, price, duration, rating, status, 
             errors["description"] = "Description is required."
         if not updated_poster:
             errors["poster"] = "Poster is required."
+        if not updated_gate or updated_gate == "No gates available":
+            errors["gate"] = "A valid cinema gate is required."
         if not movie_id or not isinstance(movie_id, int) or movie_id <= 0:
             errors["movie_id"] = "Invalid movie ID."
 
@@ -193,42 +216,55 @@ def update_modal(self, movie_id, title, genre, price, duration, rating, status, 
             messagebox.showerror("Error", "\n".join(errors.values()))
             return
 
-        start_date = datetime(2025, 10, 3, 1, 32).replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
-        end_date = start_date + timedelta(days=30)
-        movie_model = Movies()
-        if not movie_model._IsGateAvailableForMonth(int(updated_gate), start_date, end_date):
-            messagebox.showerror("Error", f"Gate {updated_gate} is not available for the entire month.")
-            return
-
+        # Delete existing showtimes
+        movie_ctrl = MoviesCntrl(movie_id=movie_id)
+        movie_model = movie_ctrl.model
         conn = movie_model._connection()
         if conn:
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM Showtimes WHERE movie_id = %s", (movie_id,))
-            conn.commit()
-            cursor.close()
-            conn.close()
+            try:
+                cursor = conn.cursor()
+                cursor.execute("DELETE FROM Showtimes WHERE movie_id = %s", (movie_id,))
+                conn.commit()
+            except Exception as e:
+                print(f"Error deleting showtimes for movie ID {movie_id}: {e}")
+                messagebox.showerror("Error", f"Failed to clear existing showtimes: {e}")
+                return
+            finally:
+                cursor.close()
+                conn.close()
 
-        movie_ctrl = MoviesCntrl(title=updated_title, genre=updated_genre, price=price_float, duration=duration_int,
-                                 rating=updated_rating, description=updated_description, poster_path=updated_poster,
-                                 status=updated_status, movie_id=movie_id, gate=updated_gate)
-        if movie_ctrl.UpdateMovie():
-            showtimes_per_day = [10, 14, 18]
-            available_seats = movie_model._GetGateCapacity(int(updated_gate))
-            start_date = start_date.replace(hour=10, minute=0)
+        # Update movie details
+        movie_ctrl = MoviesCntrl(
+            title=updated_title,
+            genre=updated_genre,
+            price=price_float,
+            duration=duration_int,
+            rating=updated_rating,
+            description=updated_description,
+            poster_path=updated_poster,
+            status=updated_status,
+            movie_id=movie_id,
+            gate=updated_gate,
+            release_date=updated_release_date
+        )
+        ok, errors = movie_ctrl.checkErrors()
+        if not ok:
+            messagebox.showerror("Error", "\n".join(errors.values()))
+            return
 
-            for day in range(30):
-                for hour in showtimes_per_day:
-                    start_time = start_date.replace(hour=hour) + timedelta(days=day)
-                    end_time = start_time + timedelta(minutes=int(duration_int) + 15)
-                    if not movie_model._InsertShowtime(movie_id, int(updated_gate), start_time, end_time, available_seats):
-                        messagebox.showerror("Error", f"Failed to schedule showtime for '{updated_title}' on {start_time}.")
-                        return
+        if not movie_ctrl.UpdateMovie():
+            messagebox.showerror("Error", f"Failed to update movie '{updated_title}'.")
+            return
 
+        # Reschedule showtimes
+        success, errors = movie_ctrl.AddMovie()
+        if success:
             messagebox.showinfo("Success", f"Movie '{updated_title}' updated and assigned to Gate {updated_gate} successfully!")
             modal.destroy()
-            self.refresh_movies()
+            if hasattr(self, 'refresh_movies'):
+                self.refresh_movies()
         else:
-            messagebox.showerror("Error", f"Failed to update movie '{updated_title}'.")
+            messagebox.showerror("Error", "\n".join(errors))
             modal.after(2000, modal.destroy)
 
     update_btn = ctk.CTkButton(buttons_frame, text="Update Movie", command=on_update, **button_style, width=180)

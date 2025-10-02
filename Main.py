@@ -36,7 +36,7 @@ class MovieKiosk(ctk.CTk):
             frame.grid(row=0, column=0, sticky="nsew")
 
         # Show first screen
-        self.show_frame("AdminPage")
+        self.show_frame("WelcomeScreen")
 
     def show_frame(self, page_name):
         frame = self.frames[page_name]

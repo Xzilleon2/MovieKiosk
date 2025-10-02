@@ -4,6 +4,13 @@ from tkinter import filedialog, messagebox
 from PIL import Image
 import os
 import shutil
+from datetime import datetime
+
+class HiddenScrollbarFrame(ctk.CTkScrollableFrame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+        # Hide scrollbar by setting its width to 0
+        self._scrollbar.configure(width=0)
 
 def register_modal(self):
     modal = ctk.CTkToplevel(self)
@@ -12,7 +19,7 @@ def register_modal(self):
     modal.transient(self)
     modal.grab_set()
 
-    w, h = 520, 720
+    w, h = 520, 760
     parent_x = self.winfo_rootx()
     parent_y = self.winfo_rooty()
     parent_w = self.winfo_width()
@@ -27,7 +34,8 @@ def register_modal(self):
     card.grid_rowconfigure(1, weight=0)
     card.grid_columnconfigure(0, weight=1)
 
-    content = ctk.CTkFrame(card, fg_color="#93DA97")
+    # Use HiddenScrollbarFrame instead of CTkFrame
+    content = HiddenScrollbarFrame(card, fg_color="#93DA97", scrollbar_button_color="#93DA97")
     content.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
 
     label_style = {"font": ("Book Antiqua", 12), "text_color": "#3E5F44", "anchor": "w"}
@@ -46,7 +54,7 @@ def register_modal(self):
                                   fg_color="#E8FFD7", corner_radius=6)
     poster_preview.pack(pady=5)
 
-    assets_dir = os.path.join(os.getcwd(), "Assets", "Posters")
+    assets_dir = os.path.join(os.path.dirname(__file__), "Assets", "Posters")
     os.makedirs(assets_dir, exist_ok=True)
     poster_filename = {"value": ""}
 
@@ -55,12 +63,11 @@ def register_modal(self):
         if file:
             fname = os.path.basename(file)
             dest = os.path.join(assets_dir, fname)
-            shutil.copy(file, dest)
-            poster_filename["value"] = fname
             try:
-                img = Image.open(file)
-                img.thumbnail((180, 200))
-                ctk_img = ctk.CTkImage(light_image=img, size=(180, 200))
+                shutil.copy(file, dest)
+                poster_filename["value"] = fname
+                img = Image.open(dest).thumbnail((180, 200))
+                ctk_img = ctk.CTkImage(light_image=Image.open(dest), size=(180, 200))
                 poster_preview.configure(image=ctk_img, text="")
                 poster_preview.image = ctk_img
             except Exception as e:
@@ -73,6 +80,11 @@ def register_modal(self):
     ctk.CTkLabel(content, text="Title", **label_style).pack(fill="x", padx=10, pady=(10, 0))
     title_entry = ctk.CTkEntry(content, **entry_style)
     title_entry.pack(fill="x", padx=10, pady=5)
+
+    ctk.CTkLabel(content, text="Release Date (YYYY-MM-DD)", **label_style).pack(fill="x", padx=10, pady=(10, 0))
+    release_date_entry = ctk.CTkEntry(content, **entry_style, placeholder_text="e.g., 2025-10-01")
+    release_date_entry.pack(fill="x", padx=10, pady=5)
+    release_date_entry.insert(0, datetime.now().strftime("%Y-%m-%d"))
 
     row1 = ctk.CTkFrame(content, fg_color="#93DA97")
     row1.pack(fill="x", padx=10, pady=5)
@@ -114,11 +126,14 @@ def register_modal(self):
     status_combobox.grid(row=1, column=2, padx=5, pady=5, sticky="ew")
     status_combobox.set("Available")
 
+    movie_ctrl = MoviesCntrl()
+    gates = movie_ctrl.get_available_gates()
+    gate_values = [f"Gate {g['gate_id']} ({g['name']})" for g in gates] or ["No gates available"]
     gate_label = ctk.CTkLabel(row2, text="Cinema Gate", **label_style)
     gate_label.grid(row=0, column=3, sticky="w", padx=5, pady=(0, 2))
-    gate_combobox = ctk.CTkComboBox(row2, values=["Gate 1", "Gate 2", "Gate 3", "Gate 4"], **combo_style, width=150)
+    gate_combobox = ctk.CTkComboBox(row2, values=gate_values, **combo_style, width=150)
     gate_combobox.grid(row=1, column=3, padx=5, pady=5, sticky="ew")
-    gate_combobox.set("Gate 1")
+    gate_combobox.set(gate_values[0] if gate_values else "No gates available")
 
     ctk.CTkLabel(content, text="Description", **label_style).pack(fill="x", padx=10, pady=(10, 0))
     description_text = ctk.CTkTextbox(content, height=140, fg_color="#E8FFD7", text_color="#3E5F44",
@@ -131,6 +146,7 @@ def register_modal(self):
 
     def on_register():
         title = title_entry.get().strip()
+        release_date = release_date_entry.get().strip()
         genre = genre_combobox.get().strip()
         price = price_entry.get().strip()
         duration = duration_entry.get().strip()
@@ -138,7 +154,7 @@ def register_modal(self):
         description = description_text.get("1.0", "end-1c").strip()
         poster_path = poster_filename["value"]
         status = status_combobox.get().strip()
-        gate = gate_combobox.get().strip().split()[1]
+        gate = gate_combobox.get().split(" ")[1].strip("()") if gate_combobox.get() != "No gates available" else None
 
         errors = {}
         try:
@@ -153,6 +169,13 @@ def register_modal(self):
                 errors["duration"] = "Duration must be a positive number."
         except ValueError:
             errors["duration"] = "Duration must be a number."
+        try:
+            if release_date:
+                datetime.strptime(release_date, "%Y-%m-%d")
+            else:
+                errors["release_date"] = "Release date is required."
+        except ValueError:
+            errors["release_date"] = "Release date must be in YYYY-MM-DD format."
         if not title:
             errors["title"] = "Title is required."
         if not genre:
@@ -165,21 +188,33 @@ def register_modal(self):
             errors["description"] = "Description is required."
         if not poster_path:
             errors["poster"] = "Poster is required."
+        if not gate or gate == "No gates available":
+            errors["gate"] = "A valid cinema gate is required."
 
         if errors:
             messagebox.showerror("Error", "\n".join(errors.values()))
             return
 
-        movie_ctrl = MoviesCntrl(title=title, genre=genre, price=price_float, duration=duration_int,
-                                 rating=rating, description=description, poster_path=poster_path,
-                                 status=status, gate=gate)
-        if movie_ctrl.AddMovie():
+        movie_ctrl = MoviesCntrl(
+            title=title,
+            genre=genre,
+            price=price_float,
+            duration=duration_int,
+            rating=rating,
+            description=description,
+            poster_path=poster_path,
+            status=status,
+            gate=gate,
+            release_date=release_date
+        )
+        success, errors = movie_ctrl.AddMovie()
+        if success:
             messagebox.showinfo("Success", f"Movie '{title}' registered and assigned to Gate {gate} successfully!")
             modal.destroy()
             if hasattr(self, 'refresh_movies'):
                 self.refresh_movies()
         else:
-            messagebox.showerror("Error", f"Failed to register movie '{title}'.")
+            messagebox.showerror("Error", "\n".join(errors))
 
     register_btn = ctk.CTkButton(buttons_frame, text="Register Movie", command=on_register, **button_style, width=180)
     register_btn.grid(row=0, column=0, padx=5, pady=5)
