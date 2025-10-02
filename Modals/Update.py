@@ -5,9 +5,10 @@ from PIL import Image
 import os
 import shutil
 
-def register_modal(self, controller):
+
+def update_modal(self, movie_id, title, genre, price, duration, rating, status, description, poster):
     modal = ctk.CTkToplevel(self)
-    modal.title("Add New Movie")
+    modal.title("Update Movie")
     modal.configure(fg_color="#E8FFD7")
     modal.transient(self)
     modal.grab_set()
@@ -79,7 +80,23 @@ def register_modal(self, controller):
 
     assets_dir = os.path.join(os.getcwd(), "Assets", "Posters")
     os.makedirs(assets_dir, exist_ok=True)
-    poster_filename = {"value": ""}
+    poster_filename = {"value": poster}
+
+    # Load existing poster if available
+    if poster:
+        try:
+            img_path = os.path.join(assets_dir, poster)
+            if os.path.exists(img_path):
+                img = Image.open(img_path)
+                img.thumbnail((180, 200))
+                ctk_img = ctk.CTkImage(light_image=img, size=(180, 200))
+                poster_preview.configure(image=ctk_img, text="")
+                poster_preview.image = ctk_img  # Keep reference
+            else:
+                poster_preview.configure(text="Poster not found")
+        except Exception as e:
+            print(f"Error loading poster: {e}")
+            poster_preview.configure(text="Error loading poster")
 
     def upload_poster():
         file = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.png *.jpeg")])
@@ -88,6 +105,7 @@ def register_modal(self, controller):
             dest = os.path.join(assets_dir, fname)
             shutil.copy(file, dest)
             poster_filename["value"] = fname
+
             try:
                 img = Image.open(file)
                 img.thumbnail((180, 200))
@@ -108,6 +126,7 @@ def register_modal(self, controller):
     ctk.CTkLabel(content, text="Title", **label_style).pack(fill="x", padx=10, pady=(10, 0))
     title_entry = ctk.CTkEntry(content, **entry_style)
     title_entry.pack(fill="x", padx=10, pady=5)
+    title_entry.insert(0, title)
 
     # ===== Row 1: Duration + Price =====
     row1 = ctk.CTkFrame(content, fg_color="#93DA97")
@@ -118,11 +137,13 @@ def register_modal(self, controller):
     duration_label.grid(row=0, column=0, sticky="w", padx=5, pady=(0, 2))
     duration_entry = ctk.CTkEntry(row1, **entry_style, width=220)
     duration_entry.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
+    duration_entry.insert(0, duration)
 
     price_label = ctk.CTkLabel(row1, text="Price", **label_style)
     price_label.grid(row=0, column=1, sticky="w", padx=5, pady=(0, 2))
     price_entry = ctk.CTkEntry(row1, **entry_style, width=220)
     price_entry.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
+    price_entry.insert(0, price)
 
     # ===== Row 2: Genre + Rating + Status =====
     row2 = ctk.CTkFrame(content, fg_color="#93DA97")
@@ -142,6 +163,7 @@ def register_modal(self, controller):
         **combo_style, width=150
     )
     genre_combobox.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
+    genre_combobox.set(genre or "Action | Adventure")
 
     rating_label = ctk.CTkLabel(row2, text="Rating", **label_style)
     rating_label.grid(row=0, column=1, sticky="w", padx=5, pady=(0, 2))
@@ -150,6 +172,7 @@ def register_modal(self, controller):
         **combo_style, width=150
     )
     rating_combobox.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
+    rating_combobox.set(rating or "PG")
 
     status_label = ctk.CTkLabel(row2, text="Status", **label_style)
     status_label.grid(row=0, column=2, sticky="w", padx=5, pady=(0, 2))
@@ -158,6 +181,7 @@ def register_modal(self, controller):
         **combo_style, width=150
     )
     status_combobox.grid(row=1, column=2, padx=5, pady=5, sticky="ew")
+    status_combobox.set(status or "Available")
 
     # ===== Description =====
     ctk.CTkLabel(content, text="Description", **label_style).pack(fill="x", padx=10, pady=(10, 0))
@@ -167,48 +191,51 @@ def register_modal(self, controller):
         font=("Book Antiqua", 12)
     )
     description_text.pack(fill="both", expand=True, padx=10, pady=5)
+    description_text.insert("1.0", description)
 
     # ===== Buttons Frame =====
     buttons_frame = ctk.CTkFrame(card, fg_color="#93DA97")
     buttons_frame.grid(row=1, column=0, pady=10)
     buttons_frame.grid_columnconfigure((0, 1), weight=1)
 
-    def on_register():
-        title = title_entry.get().strip()
-        genre = genre_combobox.get().strip()
-        price = price_entry.get().strip()
-        duration = duration_entry.get().strip()
-        rating = rating_combobox.get().strip()
-        description = description_text.get("1.0", "end-1c").strip()
-        poster = poster_filename["value"]
-        status = status_combobox.get().strip()
+    def on_update():
+        updated_title = title_entry.get().strip()
+        updated_genre = genre_combobox.get().strip()
+        updated_price = price_entry.get().strip()
+        updated_duration = duration_entry.get().strip()
+        updated_rating = rating_combobox.get().strip()
+        updated_description = description_text.get("1.0", "end-1c").strip()
+        updated_poster = poster_filename["value"]
+        updated_status = status_combobox.get().strip()
 
         # Client-side validation
         errors = {}
         try:
-            price_float = float(price) if price.strip() else 0
+            price_float = float(updated_price) if updated_price.strip() else 0
             if price_float <= 0:
                 errors["price"] = "Price must be a positive number."
         except ValueError:
             errors["price"] = "Price must be a number."
         try:
-            duration_int = int(duration) if duration.strip() else 0
+            duration_int = int(updated_duration) if updated_duration.strip() else 0
             if duration_int <= 0:
-                errors["duration"] = "Duration must be a positive integer."
+                errors["duration"] = "Duration must be a positive number."
         except ValueError:
             errors["duration"] = "Duration must be a number."
-        if not title:
+        if not updated_title:
             errors["title"] = "Title is required."
-        if not genre:
+        if not updated_genre:
             errors["genre"] = "Genre is required."
-        if not rating:
+        if not updated_rating:
             errors["rating"] = "Rating is required."
-        if not status:
+        if not updated_status:
             errors["status"] = "Status is required."
-        if not description:
+        if not updated_description:
             errors["description"] = "Description is required."
-        if not poster:
+        if not updated_poster:
             errors["poster"] = "Poster is required."
+        if not movie_id or not isinstance(movie_id, int) or movie_id <= 0:
+            errors["movie_id"] = "Invalid movie ID."
 
         if errors:
             messagebox.showerror("Error", "\n".join(errors.values()))
@@ -216,30 +243,31 @@ def register_modal(self, controller):
 
         # Create MoviesCntrl instance
         Cntrl = MoviesCntrl(
-            title=title,
-            genre=genre,
+            title=updated_title,
+            genre=updated_genre,
             price=price_float,
             duration=duration_int,
-            rating=rating,
-            description=description,
-            poster_path=poster,
-            status=status
+            rating=updated_rating,
+            description=updated_description,
+            poster_path=updated_poster,
+            status=updated_status,
+            movie_id=movie_id
         )
-        ok = Cntrl.AddMovie()
+        ok = Cntrl.UpdateMovie()
 
         if ok:
-            messagebox.showinfo("Success", f"Movie '{title}' added successfully!")
+            messagebox.showinfo("Success", f"Movie '{updated_title}' updated successfully!")
             modal.destroy()
             self.refresh_movies()  # Refresh AdminPage movie list
         else:
-            messagebox.showerror("Error", f"Failed to add movie '{title}'.")
+            messagebox.showerror("Error", f"Failed to update movie '{updated_title}'.")
             modal.after(2000, modal.destroy)
 
-    register_btn = ctk.CTkButton(
-        buttons_frame, text="Register Movie", command=on_register,
+    update_btn = ctk.CTkButton(
+        buttons_frame, text="Update Movie", command=on_update,
         **button_style, width=180
     )
-    register_btn.grid(row=0, column=0, padx=5, pady=5)
+    update_btn.grid(row=0, column=0, padx=5, pady=5)
 
     cancel_btn = ctk.CTkButton(
         buttons_frame, text="Cancel", command=modal.destroy,
