@@ -202,7 +202,7 @@ class AdminPage(ctk.CTkFrame):
                     lbl.grid(row=r, column=c, sticky="nsew", padx=10, ipady=10)
 
                 elif header == "Price":
-                    price_text = f"₱{movie['price']:.2f}" if isinstance(movie['price'], (int, float)) else "Invalid Price"
+                    price_text = f"₱{movie['price']:.2f}"
                     lbl = ctk.CTkLabel(self.tableCard, text=price_text,
                                        font=("Book Antiqua", 12), text_color="#3E5F44")
                     lbl.grid(row=r, column=c, sticky="nsew", padx=10, ipady=10)

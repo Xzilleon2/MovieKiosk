@@ -2,7 +2,7 @@ from Classes.Movies_Class import Movies
 from datetime import datetime, timedelta
 
 class MoviesCntrl:
-    def __init__(self, title="", genre="", price=0, duration=0, rating="", description="", poster_path="", status="", movie_id=None, gate=None):
+    def __init__(self, title="", genre="", price=0, duration=0, release_date=None, rating="", description="", poster_path="", status="", movie_id=None, gate=None):
         self.model = Movies()
         self.id = movie_id
         self.gate = gate
@@ -10,6 +10,7 @@ class MoviesCntrl:
         self.genre = genre
         self.price = price
         self.duration = duration
+        self.release_date = release_date
         self.rating = rating
         self.description = description
         self.poster_path = poster_path
@@ -35,12 +36,17 @@ class MoviesCntrl:
         gate_id = None
         if self.gate:
             try:
-                gate_id = int(self.gate)
+                # Handle both "Gate X (Gate X)" and direct integer string
+                gate_str = self.gate
+                if "Gate" in gate_str:
+                    gate_id = int(gate_str.split(" ")[1].strip("()"))  # e.g., "Gate 1 (Gate 1)" -> "1"
+                else:
+                    gate_id = int(gate_str)  # Direct integer string, e.g., "1"
                 if not self.model._IsGateValid(gate_id):
                     print(f"❌ Invalid gate ID {gate_id}. No such gate exists in CinemaGates.")
                     return False, [f"Invalid gate ID {gate_id}."]
-            except ValueError:
-                print(f"❌ Invalid gate ID format: {self.gate}")
+            except (ValueError, IndexError) as e:
+                print(f"❌ Invalid gate ID format: {self.gate}, error: {e}")
                 return False, [f"Invalid gate ID format: {self.gate}."]
         else:
             gate_id = self.model._GetAvailableGate()
@@ -48,7 +54,10 @@ class MoviesCntrl:
                 print("❌ No available gates for assignment. Please add gates to CinemaGates.")
                 return False, ["No available gates for assignment."]
 
-        start_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+        try:
+            start_date = datetime.strptime(self.release_date, "%Y-%m-%d").replace(hour=0, minute=0, second=0, microsecond=0)
+        except (ValueError, TypeError):
+            start_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
         end_date = start_date + timedelta(days=30)
         if not self.model._IsGateAvailableForMonth(gate_id, start_date, end_date):
             print(f"❌ Gate {gate_id} is not available for the entire month.")
@@ -93,6 +102,13 @@ class MoviesCntrl:
             errors["poster"] = "Poster is required."
         if not self.status:
             errors["status"] = "Status is required."
+        if self.release_date:
+            try:
+                datetime.strptime(self.release_date, "%Y-%m-%d")
+            except (ValueError, TypeError):
+                errors["release_date"] = "Release date must be in YYYY-MM-DD format."
+        else:
+            errors["release_date"] = "Release date is required."
         return len(errors) == 0, errors
 
     def UpdateMovie(self):
@@ -134,8 +150,8 @@ class MoviesCntrl:
                 "id": movie["movie_id"],
                 "title": movie["title"],
                 "genre": movie["genre"],
-                "price": movie["price"],
-                "duration": movie["duration"],
+                "price": float(movie["price"]) if movie["price"] is not None else 0.0,
+                "duration": int(movie["duration"]) if movie["duration"] is not None else 0,
                 "date": movie["release_date"].strftime("%B %d, %Y"),
                 "rating": movie["rating"],
                 "description": movie["description"],
@@ -157,7 +173,7 @@ class MoviesCntrl:
                 "showtime_id": s["showtime_id"],
                 "gate_id": s["gate_id"],
                 "gate_name": s["gate_name"],
-                "start_time": s["start_time"].strftime("%I:%M %p"),  # e.g., 10:00 AM
+                "start_time": s["start_time"].strftime("%I:%M %p"),
                 "end_time": s["end_time"].strftime("%I:%M %p"),
                 "available_seats": s["available_seats"]
             }

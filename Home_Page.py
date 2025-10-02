@@ -147,6 +147,7 @@ class HomePage(ctk.CTkFrame):
             text=movie["title"],
             font=("Book Antiqua", 24),
             text_color="#3E5F44",  # Dark green text
+            wraplength=250,
             anchor="w"
         ).grid(row=0, column=0, sticky="nsew", pady=10)
 
