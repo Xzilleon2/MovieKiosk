@@ -6,6 +6,7 @@ from OrderCode_Screen import OrderCodeScreen
 from Admin_Page import AdminPage
 from Sales_Page import SalesPage
 from SalesHistory_Page import SalesHistoryPage
+from Soon import SoonPage
 
 
 class MovieKiosk(ctk.CTk):
@@ -27,7 +28,7 @@ class MovieKiosk(ctk.CTk):
 
         # Loop through all pages
         for F in (WelcomeScreen, HomePage, SelectedScreen,
-                  OrderCodeScreen, AdminPage, SalesPage,
+                  OrderCodeScreen, AdminPage, SalesPage, SoonPage,
                   SalesHistoryPage):
             frame = F(parent=self.container, controller=self)
             self.frames[F.__name__] = frame
@@ -36,7 +37,7 @@ class MovieKiosk(ctk.CTk):
             frame.grid(row=0, column=0, sticky="nsew")
 
         # Show first screen
-        self.show_frame("WelcomeScreen")
+        self.show_frame("SoonPage")
 
     def show_frame(self, page_name):
         frame = self.frames[page_name]

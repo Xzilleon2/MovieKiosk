@@ -2,7 +2,7 @@ from Includes.Dbh import Dbh
 from datetime import datetime, timedelta
 
 class Movies(Dbh):
-    def get_movies_this_month(self, limit=None):
+    def _get_movies_this_month(self, limit=None):
         """Fetch movies with showtimes in the current month, optionally limited."""
         conn = self._connection()
         if not conn:
@@ -33,6 +33,45 @@ class Movies(Dbh):
             return results if results else []
         except Exception as e:
             print(f"Error fetching movies for this month: {e}")
+            return []
+        finally:
+            cursor.close()
+            conn.close()
+
+    def _get_movies_next_month(self, limit=None):
+        """Fetch movies with showtimes for the next month."""
+        conn = self._connection()
+        if not conn:
+            print("Error connecting to database!...Parent Error(Movies)")
+            return []
+        try:
+            cursor = conn.cursor(dictionary=True)
+            current_date = datetime.now().date()
+            # Start of next month
+            start_date = (current_date.replace(day=1) + timedelta(days=31)).replace(day=1)
+            # End of next month
+            end_date = (start_date + timedelta(days=31)).replace(day=1) - timedelta(days=1)
+            query = """
+            SELECT m.movie_id, m.title, m.genre, m.price, m.duration, m.release_date, 
+                   m.rating, m.description, m.poster_path, m.status
+            FROM Movies m
+            JOIN Showtimes s ON m.movie_id = s.movie_id
+            WHERE s.start_time >= %s AND s.start_time < %s
+            GROUP BY m.movie_id
+            """
+            if limit:
+                query += " LIMIT %s"
+                cursor.execute(query, (start_date, end_date, limit))
+            else:
+                cursor.execute(query, (start_date, end_date))
+            movies = cursor.fetchall()
+            for movie in movies:
+                movie['price'] = float(movie['price']) if movie['price'] is not None else 0.0
+                movie['duration'] = int(movie['duration']) if movie['duration'] is not None else 0
+            print(f"Retrieved {len(movies)} movies for {start_date} to {end_date}")
+            return movies
+        except Exception as e:
+            print(f"Error fetching movies for next month: {e}")
             return []
         finally:
             cursor.close()

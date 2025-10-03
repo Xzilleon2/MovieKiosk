@@ -4,13 +4,13 @@ from Modals.Admin import admin_login_modal
 from PIL import Image
 from Classes.MoviesView_Class import MoviesView
 
-class HomePage(ctk.CTkFrame):
+class SoonPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         super().__init__(parent, fg_color="#E8FFD7")  # Light green background
         self.controller = controller
 
         # Configure parent grid
-        self.columnconfigure(0, weight=0)
+        self.columnconfigure(0, weight=0)  # Left
         self.columnconfigure(1, weight=8)
         self.rowconfigure(0, weight=1)
 
@@ -19,12 +19,12 @@ class HomePage(ctk.CTkFrame):
             for label, btn in self.menu_buttons.items():
                 btn.configure(fg_color="#93DA97" if label == button_text else "#E8FFD7")
 
-            if button_text == "Soon":
-                self.controller.show_frame("SoonPage")
+            if button_text == "Current":
+                self.controller.show_frame("HomePage")
             elif button_text == "Previous":
                 self.controller.show_frame("PreviousPage")
             else:
-                self.controller.show_frame("HomePage")
+                self.controller.show_frame("SoonPage")
 
 
         # ====================== MIDDLE CONTAINER ======================
@@ -111,7 +111,7 @@ class HomePage(ctk.CTkFrame):
 
         # ✅ Fetch movies from DB
         mv = MoviesView()
-        movies = mv.getMoviesThisMonth()
+        movies = mv.getMoviesNextMonth()
 
         # If no movies, display a fallback label
         if not movies:
@@ -193,16 +193,3 @@ class HomePage(ctk.CTkFrame):
             text_color="#3E5F44",  # Dark green text
             anchor="w"
         ).grid(row=3, column=0, sticky="nsew", pady=10)
-
-        ctk.CTkButton(
-            infoFrame,
-            text="+",
-            font=("Book Antiqua", 20),
-            text_color="#E8FFD7",  # Light green text
-            fg_color="#3E5F44",  # Dark green button
-            hover_color="#5E936C",  # Hover green
-            corner_radius=10,
-            width=30,
-            height=30,
-            command=lambda: controller.show_frame("SelectedScreen")
-        ).grid(row=4, column=0, sticky="w", pady=5)

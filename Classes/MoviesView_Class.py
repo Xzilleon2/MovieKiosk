@@ -10,3 +10,10 @@ class MoviesView:
         Returns a list of dictionaries.
         """
         return self.controller.get_movies_this_month(limit=4)
+
+    def getMoviesNextMonth(self):
+        """
+        Fetch available movies with showtimes in the current month (limit 4).
+        Returns a list of dictionaries.
+        """
+        return self.controller.get_movies_next_month(limit=4)
