@@ -15,6 +15,7 @@ class SelectedScreen(ctk.CTkFrame):
         self.selected_date = datetime.now().date()  # Default date
         self.selected = {"seat": None, "time": None, "gate": None, "showtime_id": None}
 
+
         # ========== MAIN GRID CONFIG ==========
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=0)
@@ -160,7 +161,16 @@ class SelectedScreen(ctk.CTkFrame):
             text="Purchase Tickets", font=("Arial", 16, "bold"),
             text_color="#E8FFD7", fg_color="#3E5F44",
             hover_color="#5E936C", corner_radius=10,
-            width=250, height=50, command=self.open_modal
+            width=250, height=50,
+            command=lambda: self.open_modal(
+                self.movie_data["title"],
+                self.movie_data["rating"],
+                self.selected.get("seat"),
+                self.selected.get("time"),
+                self.selected.get("gate"),
+                self.selected_date,
+                self.movie_data["price"]
+            )
         ).grid(row=5, column=0, sticky="w", pady=(20, 10))
 
         # ========== ORDER MODAL ==========
@@ -288,44 +298,45 @@ class SelectedScreen(ctk.CTkFrame):
     # ✅ Selection Logic
     # =========================================================
     def select_option(self, value, group, showtime_id=None):
-        """Handles selection of gate, time, and seat groups."""
+        """Handles selection of gate, time, and seat groups with proper highlighting."""
         button_groups = {
             "time": self.time_buttons,
             "gate": self.gate_buttons,
             "seat": self.seat_buttons
         }
 
-        # Reset colors for this group
+        # Reset all buttons in this group to default color
         for btn in button_groups[group]:
             btn.configure(fg_color="#93DA97", text_color="#3E5F44")
 
-        # Highlight selected button
+        # Highlight only the selected button
         for btn in button_groups[group]:
-            if btn.cget("text").startswith(value):
+            if btn.cget("text") == value:
                 btn.configure(fg_color="#3E5F44", text_color="#E8FFD7")
 
-        # Store the selection
+        # Store the selected value
         self.selected[group] = value
         if showtime_id:
             self.selected["showtime_id"] = showtime_id
 
-        # ✅ If both time and gate are selected, load seats
-        if self.selected["showtime_id"] and self.selected["gate"]:
+        # ✅ Debug feedback
+        print(f"[DEBUG] Selected {group} → {value}")
+
+        # ✅ Load seats only when selecting gate or time, NOT seat
+        if group in ("gate", "time") and self.selected["showtime_id"] and self.selected["gate"]:
             gate_id = self.movie_ctrl.get_gate_id_by_name(self.selected["gate"])
-            print(f"[DEBUG] Gate selected → {value}, Gate ID: {gate_id}")
-            print(f"[DEBUG] Showtime selected → {self.selected['showtime_id']}")
             self.load_seats(self.selected["showtime_id"], gate_id)
-        else:
-            print(f"[DEBUG] {group.capitalize()} selected ({value}), waiting for other selection.")
 
     # =========================================================
     # ✅ Purchase Modal Logic
     # =========================================================
-    def open_modal(self):
-        if not all([self.selected["showtime_id"], self.selected["seat"], self.selected["gate"]]):
+    def open_modal(self, title, rating, seat, time, gate, date, price):
+        """Show purchase summary modal with selected info."""
+        if not all([seat, time, gate]):
             messagebox.showerror("Error", "Please select Time, Seat, and Gate before continuing.")
             return
 
+        # Toggle visibility
         if self.orderFrame.winfo_ismapped():
             self.orderFrame.grid_remove()
             return
@@ -334,29 +345,44 @@ class SelectedScreen(ctk.CTkFrame):
         for widget in self.orderFrame.winfo_children():
             widget.destroy()
 
+        # Header
         ctk.CTkLabel(
-            self.orderFrame, text="Order Confirmation", font=("Arial", 20, "bold"),
-            text_color="#3E5F44", anchor="nw"
+            self.orderFrame, text="Order Confirmation",
+            font=("Arial", 20, "bold"), text_color="#3E5F44", anchor="nw"
         ).pack(pady=(20, 10), padx=20, anchor="w")
 
+        # Movie info
         ctk.CTkLabel(
             self.orderFrame,
-            text=f"Selected:\nTime: {self.selected['time']}\nGate: {self.selected['gate']}\nSeat: {self.selected['seat']}",
-            font=("Arial", 14),
-            text_color="#3E5F44", anchor="w", justify="left"
+            text=f"🎬 {title} ({rating})",
+            font=("Arial", 16, "bold"), text_color="#3E5F44", anchor="w"
+        ).pack(pady=(10, 5), padx=20, anchor="w")
+
+        # Showtime + seat details
+        ctk.CTkLabel(
+            self.orderFrame,
+            text=f"Time: {time}\nDate: {date}\nGate: {gate}\nSeat: {seat}",
+            font=("Arial", 14), text_color="#3E5F44",
+            anchor="w", justify="left"
         ).pack(pady=(10, 15), padx=20, anchor="w")
 
+        # Total price
         ctk.CTkLabel(
             self.orderFrame,
-            text=f"Total Amount: ₱{self.movie_data['price']:.2f}",
+            text=f"Total Amount: ₱{price:.2f}",
             font=("Arial", 16, "bold"), text_color="#3E5F44", anchor="w"
         ).pack(pady=(10, 15), padx=20, anchor="w")
 
+        # Checkout button
         ctk.CTkButton(
             self.orderFrame,
-            text="Proceed to Checkout", font=("Arial", 14, "bold"),
-            text_color="#E8FFD7", fg_color="#3E5F44",
-            hover_color="#5E936C", width=150, height=40,
+            text="Proceed to Checkout",
+            font=("Arial", 14, "bold"),
+            text_color="#E8FFD7",
+            fg_color="#3E5F44",
+            hover_color="#5E936C",
+            width=150,
+            height=40,
             command=self.proceed_to_checkout
         ).pack(pady=20)
 
