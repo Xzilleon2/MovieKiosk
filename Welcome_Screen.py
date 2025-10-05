@@ -33,18 +33,15 @@ class WelcomeScreen(ctk.CTkFrame):
         button.pack(pady=10)
 
     def start_transaction(self):
-        """Generate a new unique transaction code and go to movies page."""
-        # Example code format: A001, A002, ...
         if not hasattr(self.controller, "last_code_number"):
             self.controller.last_code_number = 0
         self.controller.last_code_number += 1
 
-        # Create the code string
         new_code = f"A{self.controller.last_code_number:03d}"
-
-        # Save to global controller variable
         self.controller.transaction_code = new_code
         print(f"[DEBUG] Generated transaction code: {new_code}")
 
-        # Go to next screen
+        # ✅ Initialize the dictionary entry for this transaction
+        self.controller.transactions[new_code] = []  # start empty list for tickets
+
         self.controller.show_frame("HomePage")
