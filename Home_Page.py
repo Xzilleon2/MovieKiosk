@@ -16,8 +16,6 @@ class HomePage(ctk.CTkFrame):
 
         def handle_navigation(self, button_text):
             """Handle navigation and button highlighting based on button text."""
-            for label, btn in self.menu_buttons.items():
-                btn.configure(fg_color="#93DA97" if label == button_text else "#E8FFD7")
 
             if button_text == "Soon":
                 self.controller.show_frame("SoonPage")
@@ -61,8 +59,8 @@ class HomePage(ctk.CTkFrame):
         # Menu Buttons (with radius 10)
         self.menu_buttons = {}
         menus = [
-            ("Soon", "#93DA97", lambda: handle_navigation(self,"Soon")),
-            ("Current", "#E8FFD7", lambda: handle_navigation(self,"Current")),
+            ("Soon", "#E8FFD7", lambda: handle_navigation(self,"Soon")),
+            ("Current", "#93DA97", lambda: handle_navigation(self,"Current")),
             ("Previous", "#E8FFD7", lambda: handle_navigation(self,"Previous"))
         ]
         for idx, (label, bgc, com) in enumerate(menus, start=1):
@@ -168,7 +166,7 @@ class HomePage(ctk.CTkFrame):
             text_color="#3E5F44",  # Dark green text
             wraplength=200,
             anchor="w"
-        ).grid(row=0, column=0, sticky="nsew", pady=10)
+        ).grid(row=0, column=0, sticky="nsew", pady=3)
 
         ctk.CTkLabel(
             infoFrame,
@@ -176,7 +174,7 @@ class HomePage(ctk.CTkFrame):
             font=("Book Antiqua", 18),
             text_color="#3E5F44",  # Dark green text
             anchor="w"
-        ).grid(row=1, column=0, sticky="nsew", pady=10)
+        ).grid(row=1, column=0, sticky="nsew", pady=3)
 
         ctk.CTkLabel(
             infoFrame,
@@ -184,7 +182,7 @@ class HomePage(ctk.CTkFrame):
             font=("Book Antiqua", 18),
             text_color="#3E5F44",  # Dark green text
             anchor="w"
-        ).grid(row=2, column=0, sticky="nsew", pady=10)
+        ).grid(row=2, column=0, sticky="nsew", pady=3)
 
         ctk.CTkLabel(
             infoFrame,
@@ -192,7 +190,7 @@ class HomePage(ctk.CTkFrame):
             font=("Book Antiqua", 18),
             text_color="#3E5F44",  # Dark green text
             anchor="w"
-        ).grid(row=3, column=0, sticky="nsew", pady=10)
+        ).grid(row=3, column=0, sticky="nsew", pady=3)
 
         ctk.CTkButton(
             infoFrame,
@@ -204,5 +202,5 @@ class HomePage(ctk.CTkFrame):
             corner_radius=10,
             width=30,
             height=30,
-            command=lambda: controller.show_frame("SelectedScreen")
+            command=lambda m=movie: controller.show_selected_movie(m)
         ).grid(row=4, column=0, sticky="w", pady=5)

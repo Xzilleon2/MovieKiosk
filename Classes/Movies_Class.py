@@ -368,28 +368,28 @@ class Movies(Dbh):
             conn.close()
 
     def check_seat_availability(self, showtime_id, seat):
-        """Check if a seat is available for a showtime."""
+        """Check if a specific seat is available for a given showtime."""
         conn = self._connection()
         if not conn:
-            print("Error connecting to database!...Parent Error(Movies)")
+            print("❌ Error connecting to database!...Parent Error(Movies)")
             return False
-
-        cursor = conn.cursor()
-        query = """
-            SELECT COUNT(*) FROM Tickets
-            WHERE showtime_id = %s AND seat = %s
-        """
-        values = (showtime_id, seat)
 
         try:
-            cursor.execute(query, values)
-            count = cursor.fetchone()[0]
-            return count == 0
+            with conn.cursor() as cursor:
+                query = """
+                        SELECT COUNT(*)
+                        FROM Tickets
+                        WHERE showtime_id = %s \
+                          AND seat = %s \
+                        """
+                cursor.execute(query, (showtime_id, seat))
+                result = cursor.fetchone()
+                count = result[0] if result else 0
+                return count == 0
         except Exception as e:
-            print(f"Error checking seat availability for showtime ID {showtime_id}: {e}")
+            print(f"⚠️ Error checking seat availability for showtime ID {showtime_id}: {e}")
             return False
         finally:
-            cursor.close()
             conn.close()
 
     def book_seat(self, showtime_id, seat):
@@ -419,6 +419,70 @@ class Movies(Dbh):
             print(f"Error booking seat for showtime ID {showtime_id}: {e}")
             conn.rollback()
             return False
+        finally:
+            cursor.close()
+            conn.close()
+
+    def get_available_seats(self, showtime_id):
+        """Return all available seat numbers for a given showtime (debug version)."""
+        print(f"[MODEL] get_available_seats() called with showtime_id={showtime_id}")
+        conn = self._connection()
+        if not conn:
+            print("❌ DB connection failed in get_available_seats()")
+            return []
+
+        cursor = conn.cursor(dictionary=True)
+        try:
+            print(f"\n[DEBUG] Fetching available seats for showtime_id={showtime_id}")
+
+            cursor.execute("""
+                           SELECT g.gate_id, g.total_seat_capacity
+                           FROM Showtimes s
+                                    JOIN CinemaGates g ON s.gate_id = g.gate_id
+                           WHERE s.showtime_id = %s
+                           """, (showtime_id,))
+            gate_info = cursor.fetchone()
+            print(f"[DEBUG] Gate info: {gate_info}")
+
+            if not gate_info:
+                print(f"[DEBUG] ❌ No gate found for showtime {showtime_id}")
+                return []
+
+            gate_id = gate_info["gate_id"]
+
+            # Step 2: Fetch reserved seats
+            cursor.execute("""
+                           SELECT se.row_label, se.seat_number
+                           FROM Tickets t
+                                    JOIN Seats se ON t.seat_id = se.seat_id
+                           WHERE t.showtime_id = %s
+                           """, (showtime_id,))
+            reserved = {f"{row['row_label']}{row['seat_number']}" for row in cursor.fetchall()}
+            print(f"[DEBUG] Reserved seats: {reserved}")
+
+            # Step 3: Fetch all seats for that gate
+            cursor.execute("""
+                           SELECT row_label, seat_number
+                           FROM Seats
+                           WHERE gate_id = %s
+                           ORDER BY row_label, seat_number
+                           """, (gate_id,))
+            all_seats = cursor.fetchall()
+            print(f"[DEBUG] Total seats in gate {gate_id}: {len(all_seats)}")
+
+            # Step 4: Filter only available
+            available = []
+            for seat in all_seats:
+                label = f"{seat['row_label']}{seat['seat_number']}"
+                if label not in reserved:
+                    available.append({"seat_number": label})
+
+            print(f"[DEBUG] ✅ Available seats count: {len(available)}")
+            return available
+
+        except Exception as e:
+            print(f"[DEBUG] ❌ Error in get_available_seats({showtime_id}): {e}")
+            return []
         finally:
             cursor.close()
             conn.close()

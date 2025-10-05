@@ -128,12 +128,12 @@ def register_modal(self):
 
     movie_ctrl = MoviesCntrl()
     gates = movie_ctrl.get_available_gates()
-    gate_values = [f"Gate {g['gate_id']} ({g['name']})" for g in gates] or ["No gates available"]
-    gate_label = ctk.CTkLabel(row2, text="Cinema Gate", **label_style)
+    gate_values = [f"Cinema {g['gate_id']} ({g['name']})" for g in gates] or ["No cinema available"]
+    gate_label = ctk.CTkLabel(row2, text="Cinema", **label_style)
     gate_label.grid(row=0, column=3, sticky="w", padx=5, pady=(0, 2))
     gate_combobox = ctk.CTkComboBox(row2, values=gate_values, **combo_style, width=150)
     gate_combobox.grid(row=1, column=3, padx=5, pady=5, sticky="ew")
-    gate_combobox.set(gate_values[0] if gate_values else "No gates available")
+    gate_combobox.set(gate_values[0] if gate_values else "No Cinema available")
 
     ctk.CTkLabel(content, text="Description", **label_style).pack(fill="x", padx=10, pady=(10, 0))
     description_text = ctk.CTkTextbox(content, height=140, fg_color="#E8FFD7", text_color="#3E5F44",

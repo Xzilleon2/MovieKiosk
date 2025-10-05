@@ -16,8 +16,6 @@ class SoonPage(ctk.CTkFrame):
 
         def handle_navigation(self, button_text):
             """Handle navigation and button highlighting based on button text."""
-            for label, btn in self.menu_buttons.items():
-                btn.configure(fg_color="#93DA97" if label == button_text else "#E8FFD7")
 
             if button_text == "Current":
                 self.controller.show_frame("HomePage")

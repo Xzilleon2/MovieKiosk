@@ -37,12 +37,17 @@ class MovieKiosk(ctk.CTk):
             frame.grid(row=0, column=0, sticky="nsew")
 
         # Show first screen
-        self.show_frame("SoonPage")
+        self.show_frame("HomePage")
 
     def show_frame(self, page_name):
         frame = self.frames[page_name]
         frame.tkraise()
 
+    def show_selected_movie(self, movie_data):
+        """Display the SelectedScreen with data from the chosen movie."""
+        selected_screen = self.frames["SelectedScreen"]
+        selected_screen.update_selected_movie(movie_data)
+        self.show_frame("SelectedScreen")
 
 if __name__ == "__main__":
     # ✅ Set appearance & theme

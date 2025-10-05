@@ -18,7 +18,7 @@ class MoviesCntrl:
 
     def AddMovie(self):
         """Validate and add a movie, scheduling it for a month with 4 specific time slots."""
-        ok, errors = self.checkErrors()
+        ok, errors = self.__checkErrors()
         if not ok:
             print("Validation failed:", errors)
             return False, errors
@@ -77,7 +77,42 @@ class MoviesCntrl:
         print(f"✅ Movie '{self.title}' assigned to Gate {gate_id} for 30 days with 4 daily showtimes.")
         return True, []
 
-    def checkErrors(self):
+    def UpdateMovie(self):
+        """Update an existing movie."""
+        ok, errors = self.__checkErrors()
+        if not ok:
+            print("Validation failed:", errors)
+            return False
+
+        if not self.id or not isinstance(self.id, int) or self.id <= 0:
+            print("Invalid movie ID.")
+            return False
+
+        success = self.model._UpdateMovie(
+            self.id, self.title, self.genre, float(self.price), int(self.duration),
+            self.rating, self.description, self.poster_path, self.status
+        )
+        if not success:
+            print(f"❌ Failed to update movie '{self.title}'.")
+            return False
+
+        print(f"✅ Movie '{self.title}' updated successfully.")
+        return True
+
+    def deleteMovie(self, movie_id):
+        """Delete a movie and its showtimes."""
+        success = self.model._DeleteMovie(movie_id)
+        if not success:
+            print(f"❌ Failed to delete movie ID {movie_id}.")
+            return False
+        print(f"✅ Movie ID {movie_id} deleted successfully.")
+        return True
+
+    def book_seat(self, showtime_id, seat):
+        """Book a seat for a showtime."""
+        return self.model.book_seat(showtime_id, seat)
+
+    def __checkErrors(self):
         """Validate movie input data."""
         errors = {}
         if not self.title:
@@ -111,79 +146,6 @@ class MoviesCntrl:
             errors["release_date"] = "Release date is required."
         return len(errors) == 0, errors
 
-    def UpdateMovie(self):
-        """Update an existing movie."""
-        ok, errors = self.checkErrors()
-        if not ok:
-            print("Validation failed:", errors)
-            return False
-
-        if not self.id or not isinstance(self.id, int) or self.id <= 0:
-            print("Invalid movie ID.")
-            return False
-
-        success = self.model._UpdateMovie(
-            self.id, self.title, self.genre, float(self.price), int(self.duration),
-            self.rating, self.description, self.poster_path, self.status
-        )
-        if not success:
-            print(f"❌ Failed to update movie '{self.title}'.")
-            return False
-
-        print(f"✅ Movie '{self.title}' updated successfully.")
-        return True
-
-    def deleteMovie(self, movie_id):
-        """Delete a movie and its showtimes."""
-        success = self.model._DeleteMovie(movie_id)
-        if not success:
-            print(f"❌ Failed to delete movie ID {movie_id}.")
-            return False
-        print(f"✅ Movie ID {movie_id} deleted successfully.")
-        return True
-
-    def get_movies_this_month(self, limit=None):
-        """Fetch movies with showtimes for the current month."""
-        movies = self.model._get_movies_this_month(limit)
-        return [
-            {
-                "id": movie["movie_id"],
-                "title": movie["title"],
-                "genre": movie["genre"],
-                "price": float(movie["price"]) if movie["price"] is not None else 0.0,
-                "duration": int(movie["duration"]) if movie["duration"] is not None else 0,
-                "date": movie["release_date"].strftime("%B %d, %Y"),
-                "rating": movie["rating"],
-                "description": movie["description"],
-                "poster": movie["poster_path"],
-                "status": movie["status"]
-            }
-            for movie in movies
-        ]
-
-    def get_movies_next_month(self, limit=None):
-        """Fetch movies with showtimes for the current month."""
-        movies = self.model._get_movies_next_month(limit)
-        return [
-            {
-                "id": movie["movie_id"],
-                "title": movie["title"],
-                "genre": movie["genre"],
-                "price": float(movie["price"]) if movie["price"] is not None else 0.0,
-                "duration": int(movie["duration"]) if movie["duration"] is not None else 0,
-                "date": movie["release_date"].strftime("%B %d, %Y"),
-                "rating": movie["rating"],
-                "description": movie["description"],
-                "poster": movie["poster_path"],
-                "status": movie["status"]
-            }
-            for movie in movies
-        ]
-
-    def get_available_gates(self):
-        """Fetch available gates."""
-        return self.model.get_available_gates()
-
     def get_available_showtimes(self, movie_id, date=None):
         """Fetch available showtimes for a movie."""
         showtimes = self.model.get_available_showtimes(movie_id, date)
@@ -199,10 +161,17 @@ class MoviesCntrl:
             for s in showtimes
         ]
 
+    def get_available_gates(self):
+        """Fetch available gates."""
+
+        return self.model.get_available_gates()
+
     def check_seat_availability(self, showtime_id, seat):
         """Check if a seat is available for a showtime."""
         return self.model.check_seat_availability(showtime_id, seat)
 
-    def book_seat(self, showtime_id, seat):
-        """Book a seat for a showtime."""
-        return self.model.book_seat(showtime_id, seat)
+    def get_available_seats(self, showtime_id):
+        print(f"[CTRL] get_available_seats() called with showtime_id={showtime_id}")
+        seats = self.model.get_available_seats(showtime_id)
+        print(f"[CTRL] Model returned {len(seats)} seats")
+        return seats
