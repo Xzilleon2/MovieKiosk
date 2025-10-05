@@ -219,32 +219,38 @@ class SelectedScreen(ctk.CTkFrame):
             self.time_buttons.append(btn)
 
     def select_time(self, showtime_id, time):
-        """Handles time selection and loads the seats."""
+        """Handles time selection (does not load seats yet)."""
         self.selected["time"] = time
         self.selected["showtime_id"] = showtime_id
 
-        # visually highlight selected time
+        # Highlight selected time
         for btn in self.time_buttons:
             if time in btn.cget("text"):
                 btn.configure(fg_color="#3E5F44", text_color="#E8FFD7")
             else:
                 btn.configure(fg_color="#93DA97", text_color="#3E5F44")
 
-        # load seats for that showtime
-        self.load_seats(showtime_id)
+        # ✅ Only trigger seat loading when both gate and time are selected
+        if self.selected["gate"]:
+            gate_id = self.movie_ctrl.get_gate_id_by_name(self.selected["gate"])
+            print(f"[DEBUG] Time selected → {time}, Showtime ID: {showtime_id}, Gate: {self.selected['gate']}")
+            self.load_seats(showtime_id, gate_id)
+        else:
+            print(f"[DEBUG] Time selected ({time}), waiting for gate selection.")
 
     # =========================================================
     # ✅ Load Available Seats when Showtime Selected
     # =========================================================
-    def load_seats(self, showtime_id):
+    def load_seats(self, showtime_id, gate_id):
         print(f"[UI] load_seats() triggered with showtime_id={showtime_id}")
         self.selected["showtime_id"] = showtime_id
+        self.selected["gate_id"] = gate_id
 
         for btn in self.seat_buttons:
             btn.destroy()
         self.seat_buttons.clear()
 
-        seats = self.movie_ctrl.get_available_seats(showtime_id)
+        seats = self.movie_ctrl.get_available_seats(showtime_id, gate_id)
         print(f"[UI] Retrieved {len(seats)} seats from controller")
 
         if not seats:
@@ -254,26 +260,63 @@ class SelectedScreen(ctk.CTkFrame):
             ).grid(row=0, column=0, pady=10)
             return
 
+        # ✅ Render seat buttons dynamically
+        for i, seat in enumerate(seats):
+            try:
+                seat_label = f"{seat['row_label']}{seat['seat_number']}"
+            except KeyError:
+                # fallback if your DB uses different column names
+                seat_label = f"{seat.get('row', '')}{seat.get('number', '')}"
+
+            btn = ctk.CTkButton(
+                self.seatContainer,
+                text=seat_label,
+                font=("Arial", 12, "bold"),
+                text_color="#3E5F44",
+                fg_color="#93DA97",
+                hover_color="#5E936C",
+                corner_radius=8,
+                width=60, height=40,
+                command=lambda s=seat_label: self.select_option(s, "seat")
+            )
+            btn.grid(row=i // 10, column=i % 10, padx=5, pady=5)
+            self.seat_buttons.append(btn)
+
+        print(f"[UI] Rendered {len(self.seat_buttons)} seat buttons successfully.")
+
     # =========================================================
     # ✅ Selection Logic
     # =========================================================
     def select_option(self, value, group, showtime_id=None):
+        """Handles selection of gate, time, and seat groups."""
         button_groups = {
             "time": self.time_buttons,
             "gate": self.gate_buttons,
             "seat": self.seat_buttons
         }
 
+        # Reset colors for this group
         for btn in button_groups[group]:
             btn.configure(fg_color="#93DA97", text_color="#3E5F44")
 
+        # Highlight selected button
         for btn in button_groups[group]:
             if btn.cget("text").startswith(value):
                 btn.configure(fg_color="#3E5F44", text_color="#E8FFD7")
 
+        # Store the selection
         self.selected[group] = value
         if showtime_id:
             self.selected["showtime_id"] = showtime_id
+
+        # ✅ If both time and gate are selected, load seats
+        if self.selected["showtime_id"] and self.selected["gate"]:
+            gate_id = self.movie_ctrl.get_gate_id_by_name(self.selected["gate"])
+            print(f"[DEBUG] Gate selected → {value}, Gate ID: {gate_id}")
+            print(f"[DEBUG] Showtime selected → {self.selected['showtime_id']}")
+            self.load_seats(self.selected["showtime_id"], gate_id)
+        else:
+            print(f"[DEBUG] {group.capitalize()} selected ({value}), waiting for other selection.")
 
     # =========================================================
     # ✅ Purchase Modal Logic

@@ -146,20 +146,74 @@ class MoviesCntrl:
             errors["release_date"] = "Release date is required."
         return len(errors) == 0, errors
 
-    def get_available_showtimes(self, movie_id, date=None):
-        """Fetch available showtimes for a movie."""
-        showtimes = self.model.get_available_showtimes(movie_id, date)
-        return [
-            {
+    def get_available_showtimes(self, movie_id, date):
+        showtimes = self.model._get_available_showtimes(movie_id, date)
+        formatted_showtimes = []
+
+        for s in showtimes:
+            start_val = s["start_time"]
+            end_val = s["end_time"]
+
+            # ✅ Convert timedelta → time → formatted string
+            if isinstance(start_val, timedelta):
+                total_seconds = int(start_val.total_seconds())
+                hours = (total_seconds // 3600) % 24
+                minutes = (total_seconds // 60) % 60
+                start_str = f"{hours % 12 or 12}:{minutes:02d} {'AM' if hours < 12 else 'PM'}"
+            elif isinstance(start_val, datetime):
+                start_str = start_val.strftime("%I:%M %p")
+            else:
+                start_str = str(start_val)
+
+            if isinstance(end_val, timedelta):
+                total_seconds = int(end_val.total_seconds())
+                hours = (total_seconds // 3600) % 24
+                minutes = (total_seconds // 60) % 60
+                end_str = f"{hours % 12 or 12}:{minutes:02d} {'AM' if hours < 12 else 'PM'}"
+            elif isinstance(end_val, datetime):
+                end_str = end_val.strftime("%I:%M %p")
+            else:
+                end_str = str(end_val)
+
+            formatted_showtimes.append({
                 "showtime_id": s["showtime_id"],
                 "gate_id": s["gate_id"],
                 "gate_name": s["gate_name"],
-                "start_time": s["start_time"].strftime("%I:%M %p"),
-                "end_time": s["end_time"].strftime("%I:%M %p"),
+                "start_time": start_str,
+                "end_time": end_str,
                 "available_seats": s["available_seats"]
-            }
-            for s in showtimes
-        ]
+            })
+
+        return formatted_showtimes
+
+    def get_gate_id_by_name(self, gate_name):
+        """Return the gate_id for a given gate name."""
+        try:
+            conn = self.model._connection()
+            if not conn:
+                print("❌ Database connection failed in get_gate_id_by_name()")
+                return None
+
+            cursor = conn.cursor(dictionary=True)
+            query = "SELECT gate_id FROM CinemaGates WHERE name = %s LIMIT 1"
+            cursor.execute(query, (gate_name,))
+            result = cursor.fetchone()
+
+            if result:
+                return result["gate_id"]
+            else:
+                print(f"⚠️ No gate found with name '{gate_name}'")
+                return None
+
+        except Exception as e:
+            print(f"❌ Error in get_gate_id_by_name(): {e}")
+            return None
+
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
 
     def get_available_gates(self):
         """Fetch available gates."""
@@ -170,8 +224,5 @@ class MoviesCntrl:
         """Check if a seat is available for a showtime."""
         return self.model.check_seat_availability(showtime_id, seat)
 
-    def get_available_seats(self, showtime_id):
-        print(f"[CTRL] get_available_seats() called with showtime_id={showtime_id}")
-        seats = self.model.get_available_seats(showtime_id)
-        print(f"[CTRL] Model returned {len(seats)} seats")
-        return seats
+    def get_available_seats(self, showtime_id, gate_name):
+        return self.model._get_available_seats(showtime_id, gate_name)

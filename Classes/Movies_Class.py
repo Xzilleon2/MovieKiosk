@@ -77,34 +77,39 @@ class Movies(Dbh):
             cursor.close()
             conn.close()
 
-    def get_available_showtimes(self, movie_id, date=None):
-        """Fetch available showtimes for a movie on a specific date (or today)."""
+    def _get_available_showtimes(self, movie_id, date=None):
+        """Fetch all showtimes for a movie scheduled today (current date)."""
         conn = self._connection()
         if not conn:
-            print("Error connecting to database!...Parent Error(Movies)")
+            print("❌ Error connecting to database!...Parent Error(Movies)")
             return []
 
         cursor = conn.cursor(dictionary=True)
-        if date is None:
-            date = datetime.now().date()
-        start_of_day = datetime.combine(date, datetime.min.time())
+        today = datetime.now().date() if date is None else date
+        start_of_day = datetime.combine(today, datetime.min.time())
         end_of_day = start_of_day + timedelta(days=1) - timedelta(seconds=1)
 
         query = """
-            SELECT s.showtime_id, s.gate_id, g.name AS gate_name, s.start_time, s.end_time, s.available_seats
-            FROM Showtimes s
-            JOIN CinemaGates g ON s.gate_id = g.gate_id
-            WHERE s.movie_id = %s AND s.start_time >= %s AND s.start_time <= %s
-            ORDER BY s.start_time
-        """
+                SELECT s.showtime_id,
+                       s.gate_id,
+                       g.name AS gate_name, TIME (s.start_time) AS start_time, TIME (s.end_time) AS end_time, s.available_seats
+                FROM Showtimes s
+                    JOIN CinemaGates g \
+                ON s.gate_id = g.gate_id
+                WHERE s.movie_id = %s
+                  AND s.start_time BETWEEN %s \
+                  AND %s
+                ORDER BY g.name, s.start_time \
+                """
         values = (movie_id, start_of_day, end_of_day)
 
         try:
             cursor.execute(query, values)
             results = cursor.fetchall()
-            return results if results else []
+            print(f"[DEBUG] Found {len(results)} showtimes for {today} (movie {movie_id})")
+            return results
         except Exception as e:
-            print(f"Error fetching showtimes for movie ID {movie_id}: {e}")
+            print(f"❌ Error fetching showtimes for movie ID {movie_id}: {e}")
             return []
         finally:
             cursor.close()
@@ -423,66 +428,15 @@ class Movies(Dbh):
             cursor.close()
             conn.close()
 
-    def get_available_seats(self, showtime_id):
-        """Return all available seat numbers for a given showtime (debug version)."""
-        print(f"[MODEL] get_available_seats() called with showtime_id={showtime_id}")
+    def _get_available_seats(self, showtime_id, gate_name):
         conn = self._connection()
-        if not conn:
-            print("❌ DB connection failed in get_available_seats()")
-            return []
-
         cursor = conn.cursor(dictionary=True)
         try:
-            print(f"\n[DEBUG] Fetching available seats for showtime_id={showtime_id}")
-
             cursor.execute("""
-                           SELECT g.gate_id, g.total_seat_capacity
-                           FROM Showtimes s
-                                    JOIN CinemaGates g ON s.gate_id = g.gate_id
-                           WHERE s.showtime_id = %s
-                           """, (showtime_id,))
-            gate_info = cursor.fetchone()
-            print(f"[DEBUG] Gate info: {gate_info}")
-
-            if not gate_info:
-                print(f"[DEBUG] ❌ No gate found for showtime {showtime_id}")
-                return []
-
-            gate_id = gate_info["gate_id"]
-
-            # Step 2: Fetch reserved seats
-            cursor.execute("""
-                           SELECT se.row_label, se.seat_number
-                           FROM Tickets t
-                                    JOIN Seats se ON t.seat_id = se.seat_id
-                           WHERE t.showtime_id = %s
-                           """, (showtime_id,))
-            reserved = {f"{row['row_label']}{row['seat_number']}" for row in cursor.fetchall()}
-            print(f"[DEBUG] Reserved seats: {reserved}")
-
-            # Step 3: Fetch all seats for that gate
-            cursor.execute("""
-                           SELECT row_label, seat_number
-                           FROM Seats
-                           WHERE gate_id = %s
-                           ORDER BY row_label, seat_number
-                           """, (gate_id,))
-            all_seats = cursor.fetchall()
-            print(f"[DEBUG] Total seats in gate {gate_id}: {len(all_seats)}")
-
-            # Step 4: Filter only available
-            available = []
-            for seat in all_seats:
-                label = f"{seat['row_label']}{seat['seat_number']}"
-                if label not in reserved:
-                    available.append({"seat_number": label})
-
-            print(f"[DEBUG] ✅ Available seats count: {len(available)}")
-            return available
-
-        except Exception as e:
-            print(f"[DEBUG] ❌ Error in get_available_seats({showtime_id}): {e}")
-            return []
+                            SELECT * FROM seats s
+                            WHERE s.gate_id =  %s AND showtime_id = %s AND status = "Available"
+                           """, (gate_name, showtime_id))
+            return cursor.fetchall()
         finally:
             cursor.close()
             conn.close()
