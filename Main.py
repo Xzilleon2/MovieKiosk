@@ -15,6 +15,7 @@ class MovieKiosk(ctk.CTk):
         self.title("Movie Kiosk")
         self.attributes("-fullscreen", True)   # Fullscreen
         self.bind("<Escape>", lambda e: self.destroy())  # Exit with ESC
+        self.transaction_code = None
 
         # Main container (fills whole screen)
         self.container = ctk.CTkFrame(self, fg_color="black")
@@ -37,10 +38,15 @@ class MovieKiosk(ctk.CTk):
             frame.grid(row=0, column=0, sticky="nsew")
 
         # Show first screen
-        self.show_frame("HomePage")
+        self.show_frame("WelcomeScreen")
 
     def show_frame(self, page_name):
         frame = self.frames[page_name]
+
+        # 🔄 If the page has an update_code() method, call it before showing
+        if hasattr(frame, "update_code"):
+            frame.update_code()
+
         frame.tkraise()
 
     def show_selected_movie(self, movie_data):
