@@ -234,14 +234,19 @@ class SelectedScreen(ctk.CTkFrame):
 
     # ========================= SEATS =========================
     def load_seats(self, showtime_id, gate_id):
+        # Clear previous seats / labels
         for btn in self.seat_buttons:
             btn.destroy()
         self.seat_buttons.clear()
 
         seats = self.movie_ctrl.get_available_seats(showtime_id, gate_id)
         if not seats:
-            ctk.CTkLabel(self.seatContainer, text="No seats available", font=("Arial", 12), text_color="#ef4444")\
-                .grid(row=0, column=0, pady=10)
+            no_seat_label = ctk.CTkLabel(
+                self.seatContainer, text="No seats available",
+                font=("Arial", 12), text_color="#ef4444"
+            )
+            no_seat_label.grid(row=0, column=0, pady=10)
+            self.seat_buttons.append(no_seat_label)  # track it so it can be destroyed later
             return
 
         for i, seat in enumerate(seats):
