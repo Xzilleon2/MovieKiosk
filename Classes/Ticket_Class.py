@@ -60,6 +60,7 @@ class Ticket(Dbh):
               FROM tickets t
                        JOIN movies m ON t.movie_id = m.movie_id
                        JOIN showtimes s ON t.showtime_id = s.showtime_id \
+              WHERE t.status = "Booked"
               """
 
         try:
@@ -88,3 +89,62 @@ class Ticket(Dbh):
         finally:
             cursor.close()
             db.close()
+
+    def _cancel_ticket(self, ticket_id):
+        """
+        Cancels a ticket by updating its status to 'Cancelled' in the database.
+        Returns True if successful, False otherwise.
+        """
+        conn = self._connection()
+        try:
+            print(f"[DEBUG] _cancel_ticket() started for ticket_id={ticket_id}")
+            query = "UPDATE tickets SET status = %s WHERE ticket_id = %s"
+            values = ("Cancelled", ticket_id)
+
+            cursor = conn.cursor()
+            cursor.execute(query, values)
+            conn.commit()
+
+            if cursor.rowcount > 0:
+                print(f"[DEBUG] Ticket ID {ticket_id} successfully cancelled in DB.")
+                return True
+            else:
+                print(f"[DEBUG] No ticket found in DB with ID {ticket_id}.")
+                return False
+
+        except Exception as e:
+            print(f"[ERROR] Failed to cancel ticket {ticket_id}: {e}")
+            return False
+
+    def insert_payment(self, data):
+        """
+        Inserts payment info into the payment table.
+        """
+        conn = self._connection()
+        try:
+            print(f"[DEBUG] insert_payment() called with: {data}")
+            cursor = conn.cursor()
+            sql = """
+                  INSERT INTO payments (ticket_id, money, `change`, method, payment_date)
+                  VALUES (%s, %s, %s, %s, %s) \
+                  """
+            values = (
+                data["ticket_id"],
+                data["money"],
+                data["change"],
+                data.get("method", "CASH"),
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            )
+            print(f"[DEBUG] Executing SQL: {sql.strip()}")
+            print(f"[DEBUG] With values: {values}")
+            cursor.execute(sql, values)
+            conn.commit()
+            print(f"[DEBUG] ✅ Payment inserted successfully for ticket_id={data['ticket_id']}")
+            return True
+        except Exception as e:
+            conn.rollback()
+            print(f"[ERROR] Failed to insert payment: {e}")
+            return False
+        finally:
+            cursor.close()
+            conn.close()

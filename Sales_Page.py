@@ -1,7 +1,8 @@
 import customtkinter as ctk
-from Modals.Delete import delete_modal
-from Modals.Update import update_modal
+from Modals.choice import choice_modal
+from Modals.Cancel import cancel_modal
 from Classes.TicketView_Class import TicketView
+from Classes.TicketCntrl_Class import TicketCntrl
 from datetime import datetime
 
 
@@ -188,7 +189,7 @@ class SalesPage(ctk.CTkFrame):
                     del_btn = ctk.CTkButton(
                         action_frame, text="⛔", width=30, height=30, font=("Book Antiqua", 12),
                         fg_color="#ef4444", hover_color="#dc2626",
-                        command=lambda t_id=ticket["ticket_id"], m_title=ticket["movie_title"]: delete_modal(self, t_id, m_title)
+                        command=lambda t_id=ticket["ticket_id"], code=ticket["code"]: cancel_modal(self, t_id, code)
                     )
                     del_btn.grid(row=0, column=0, padx=2, sticky="nsew")
 
@@ -196,9 +197,7 @@ class SalesPage(ctk.CTkFrame):
                     upd_btn = ctk.CTkButton(
                         action_frame, text="💵", width=30, height=30, font=("Book Antiqua", 12),
                         fg_color="#22c55e", hover_color="#16a34a",
-                        command=lambda t_id=ticket["ticket_id"], m_title=ticket["movie_title"],
-                                      t_seat=ticket["seat"], t_showtime=ticket["showtime"], t_price=ticket["price"]:
-                        update_modal(self, t_id, m_title, t_seat, t_showtime, t_price)
+                        command=lambda t=ticket: self.open_choice_modal(t)
                     )
                     upd_btn.grid(row=0, column=1, padx=2, sticky="nsew")
 
@@ -212,6 +211,53 @@ class SalesPage(ctk.CTkFrame):
                     lbl = ctk.CTkLabel(self.tableCard, text=ticket.get(key, ""),
                                        font=("Book Antiqua", 12), text_color="#3E5F44")
                     lbl.grid(row=r, column=c, sticky="nsew", padx=10, ipady=10)
+
+    def open_choice_modal(self, ticket):
+        """Open choice modal with the selected ticket data."""
+        from Modals.choice import choice_modal
+        print(f"[DEBUG] Opening choice modal for ticket: {ticket}")
+
+        # Store the selected ticket globally in the class
+        self.current_ticket = ticket
+
+        # Callback when Cash is chosen
+        def handle_cash_payment(ticket_data):
+            from Modals.Payment import payment_modal
+            print(f"[DEBUG] Cash option selected. Passing ticket to payment modal: {ticket_data}")
+            payment_modal(self, ticket_data, pay_callback=self.process_payment)
+
+        # Call the choice modal and pass ticket to it
+        choice_modal(self, cash_callback=handle_cash_payment, ticket=ticket)
+
+    def process_payment(self, payment_data):
+        print(f"[DEBUG] Payment confirmed. Amount entered: ₱{payment_data}")
+
+        if not hasattr(self, "current_ticket") or not self.current_ticket:
+            print("[ERROR] No ticket selected for payment.")
+            return
+
+        ticket = self.current_ticket
+        total_price = ticket["price"]
+
+        # Safely extract from payment_data dict
+        money = float(payment_data.get("money", 0))
+        change = float(payment_data.get("change", 0))
+        method = payment_data.get("method", "Cash")
+
+        # Prepare full payment data for controller
+        full_payment = {
+            "ticket_id": ticket["ticket_id"],
+            "money": money,
+            "change": change,
+            "method": method,
+            "payment_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+
+        print(f"[DEBUG] Sending payment_data to controller: {full_payment}")
+
+        # Pass data to controller for DB insert
+        controller = TicketCntrl()
+        controller.handle_payment(full_payment)
 
     def next_page(self):
         """Go to the next page of tickets."""
@@ -236,3 +282,4 @@ class SalesPage(ctk.CTkFrame):
             lbl = ctk.CTkLabel(self.tableCard, text=f"Error loading tickets: {str(e)}",
                                font=("Book Antiqua", 12), text_color="#ef4444")
             lbl.grid(row=2, column=0, columnspan=len(self.headers), pady=20)
+    

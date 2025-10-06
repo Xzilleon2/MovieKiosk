@@ -35,6 +35,22 @@ class TicketCntrl(Ticket):
             print(f"ticket content: {ticket}")
         self._insert_tickets(tickets_to_insert)
 
+    def cancel_ticket(self, ticket_id):
+        """
+        Public method that handles cancellation request.
+        """
+        print(f"[DEBUG] cancel_ticket() called with ticket_id={ticket_id}")
+
+        # Call the internal DB update function
+        ok = self._cancel_ticket(ticket_id)
+
+        if ok:
+            print(f"[DEBUG] Ticket {ticket_id} cancelled successfully in cancel_ticket()")
+        else:
+            print(f"[DEBUG] Ticket {ticket_id} cancellation failed in cancel_ticket()")
+
+        return ok
+
     def __checkErrors(self, transaction_code):
         """
         Ensure all required fields exist for tickets under a transaction code
@@ -48,3 +64,29 @@ class TicketCntrl(Ticket):
                 if field not in ticket or ticket[field] is None:
                     return f"Missing field '{field}' in ticket {ticket}"
         return None
+
+    def handle_payment(self, payment_data):
+        """
+        Receives payment data from modal and processes it.
+        """
+        print(f"[DEBUG] Controller received from modal: {payment_data}")
+
+        result = self.process_payment(payment_data)
+
+        print(f"[DEBUG] Controller processed payment result: {result}")
+
+        if result["success"]:
+            print("✅ Payment successful!")
+        else:
+            print("❌ Payment failed:", result["message"])
+
+    def process_payment(self, payment_data):
+        print(f"[DEBUG] process_payment() started with: {payment_data}")
+        try:
+            ticket = Ticket()
+            success = ticket.insert_payment(payment_data)
+            print(f"[DEBUG] insert_payment() returned: {success}")
+            return {"success": success, "message": "Inserted successfully" if success else "Insert failed"}
+        except Exception as e:
+            print(f"[ERROR] Exception in process_payment(): {e}")
+            return {"success": False, "message": str(e)}
