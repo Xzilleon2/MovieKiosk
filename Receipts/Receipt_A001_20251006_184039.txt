@@ -1,0 +1,26 @@
+============================================
+                       Payment Receipt
+        ============================================
+
+        Movie: Pet Sematary
+        Date: October 06, 2025
+        Time: 06:40 PM
+
+        Cinema: Gate 1
+        Seat: A3
+
+        Transaction Code: A001
+
+        --------------------------------------------
+        Amount:         ₱200.00
+        Customer Cash:  ₱500.00
+        Change:         ₱300.00
+        --------------------------------------------
+
+        Thank you for choosing our cinema!
+        Enjoy your movie 🎬
+        ============================================
+
+        Stub:
+        Pet Sematary | Gate 1 | A3
+        --------------------------------------------

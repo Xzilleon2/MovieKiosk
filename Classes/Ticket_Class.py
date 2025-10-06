@@ -1,5 +1,7 @@
-from decimal import Decimal
-
+import os
+import platform
+import subprocess
+import glob
 from Includes.Dbh import Dbh
 from datetime import datetime
 
@@ -117,16 +119,13 @@ class Ticket(Dbh):
             return False
 
     def insert_payment(self, data):
-        """
-        Inserts payment info into the payment table.
-        """
         conn = self._connection()
         try:
             print(f"[DEBUG] insert_payment() called with: {data}")
             cursor = conn.cursor()
             sql = """
                   INSERT INTO payments (ticket_id, money, `change`, method, payment_date)
-                  VALUES (%s, %s, %s, %s, %s) \
+                  VALUES (%s, %s, %s, %s, %s)
                   """
             values = (
                 data["ticket_id"],
@@ -135,12 +134,14 @@ class Ticket(Dbh):
                 data.get("method", "CASH"),
                 datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             )
-            print(f"[DEBUG] Executing SQL: {sql.strip()}")
-            print(f"[DEBUG] With values: {values}")
             cursor.execute(sql, values)
             conn.commit()
             print(f"[DEBUG] ✅ Payment inserted successfully for ticket_id={data['ticket_id']}")
+
+            # Open latest receipt
+            self.__open_latest_receipt(r"C:\xampp\htdocs\MovieKiosk\Receipts")
             return True
+
         except Exception as e:
             conn.rollback()
             print(f"[ERROR] Failed to insert payment: {e}")
@@ -148,3 +149,20 @@ class Ticket(Dbh):
         finally:
             cursor.close()
             conn.close()
+
+    def __open_receipt(self, file_path):
+        """Open the receipt file depending on the operating system."""
+        if platform.system() == "Windows":
+            os.startfile(file_path)  # Windows
+        elif platform.system() == "Darwin":  # macOS
+            subprocess.run(["open", file_path])
+        else:  # Linux
+            subprocess.run(["xdg-open", file_path])
+
+    def __open_latest_receipt(self, folder_path):
+        list_of_files = glob.glob(f"{folder_path}\\*.txt")  # all txt files
+        if not list_of_files:
+            print("[ERROR] No receipt files found in folder.")
+            return
+        latest_file = max(list_of_files, key=os.path.getctime)  # newest file
+        self.__open_receipt(latest_file)

@@ -3,20 +3,18 @@ from datetime import datetime
 
 class ReceiptGenerator:
     def __init__(self, save_dir="Receipts"):
+        # Get the project root directory (MovieKiosk)
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.save_dir = os.path.join(base_dir, save_dir)
+
         # Create directory if it doesn't exist
-        if not os.path.exists(save_dir):
-            os.makedirs(save_dir)
-        self.save_dir = save_dir
+        if not os.path.exists(self.save_dir):
+            os.makedirs(self.save_dir)
 
     def generate_receipt(self, payment_data, ticket_data):
-        """
-        Generates a formatted text receipt and saves it to the Receipts folder.
-        """
-        # File name example: Receipt_A001_20251006_101530.txt
         filename = f"Receipt_{ticket_data['code']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
         filepath = os.path.join(self.save_dir, filename)
 
-        # Format receipt content
         content = f"""
         ============================================
                        Payment Receipt
@@ -46,9 +44,9 @@ class ReceiptGenerator:
         --------------------------------------------
         """
 
-        # Save to file
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(content.strip())
 
         print(f"[DEBUG] Receipt saved: {filepath}")
+
         return filepath

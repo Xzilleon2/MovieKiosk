@@ -1,0 +1,26 @@
+============================================
+                       Payment Receipt
+        ============================================
+
+        Movie: Harry Potter
+        Date: October 06, 2025
+        Time: 06:28 PM
+
+        Cinema: Gate 2
+        Seat: A2
+
+        Transaction Code: A001
+
+        --------------------------------------------
+        Amount:         ₱250.00
+        Customer Cash:  ₱1000.00
+        Change:         ₱750.00
+        --------------------------------------------
+
+        Thank you for choosing our cinema!
+        Enjoy your movie 🎬
+        ============================================
+
+        Stub:
+        Harry Potter | Gate 2 | A2
+        --------------------------------------------

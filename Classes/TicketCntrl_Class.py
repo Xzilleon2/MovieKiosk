@@ -1,5 +1,6 @@
 from Classes.Ticket_Class import Ticket
 from datetime import datetime
+from Includes.Receipt import ReceiptGenerator
 
 
 class TicketCntrl(Ticket):
@@ -65,18 +66,18 @@ class TicketCntrl(Ticket):
                     return f"Missing field '{field}' in ticket {ticket}"
         return None
 
-    def handle_payment(self, payment_data):
-        """
-        Receives payment data from modal and processes it.
-        """
-        print(f"[DEBUG] Controller received from modal: {payment_data}")
+    def handle_payment(self, payment_data, ticket_data):
+        print(f"[DEBUG] Controller received payment: {payment_data}")
+        print(f"[DEBUG] Related ticket: {ticket_data}")
 
         result = self.process_payment(payment_data)
-
-        print(f"[DEBUG] Controller processed payment result: {result}")
+        print(f"[DEBUG] Payment result: {result}")
 
         if result["success"]:
-            print("✅ Payment successful!")
+            print("✅ Payment successful! Generating receipt...")
+            receipt = ReceiptGenerator()
+            path = receipt.generate_receipt(payment_data, ticket_data)
+            print(f"🧾 Receipt created at: {path}")
         else:
             print("❌ Payment failed:", result["message"])
 

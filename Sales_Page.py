@@ -1,9 +1,11 @@
 import customtkinter as ctk
-from Modals.choice import choice_modal
+from Includes.Receipt import ReceiptGenerator
 from Modals.Cancel import cancel_modal
 from Classes.TicketView_Class import TicketView
 from Classes.TicketCntrl_Class import TicketCntrl
 from datetime import datetime
+import tkinter.messagebox as messagebox
+import os, platform, subprocess
 
 
 class SalesPage(ctk.CTkFrame):
@@ -257,7 +259,46 @@ class SalesPage(ctk.CTkFrame):
 
         # Pass data to controller for DB insert
         controller = TicketCntrl()
-        controller.handle_payment(full_payment)
+        result = controller.handle_payment(full_payment, ticket)
+
+        # === If successful, generate and open receipt automatically === #
+        if result and result.get("success"):
+            print("✅ Payment saved successfully, generating receipt...")
+
+            # Prepare receipt data
+            receipt_data = {
+                "movie_title": ticket["movie_title"],
+                "show_date": ticket.get("show_date", datetime.now().strftime("%B %d, %Y")),
+                "show_time": ticket.get("showtime", ""),
+                "cinema": ticket.get("gate", "Cinema 1"),
+                "seat": ticket.get("seat", "N/A"),
+                "ticket_code": ticket.get("code", "0001"),
+                "amount": f"₱{total_price:.2f}",
+                "customer_cash": f"₱{money:.2f}",
+                "change": f"₱{change:.2f}",
+            }
+
+            try:
+                generator = ReceiptGenerator()
+                pdf_path = generator.create_receipt(receipt_data)
+                print(f"✅ Receipt generated successfully at: {pdf_path}")
+
+                # Automatically open the receipt file
+                if platform.system() == "Windows":
+                    os.startfile(pdf_path)
+                elif platform.system() == "Darwin":  # macOS
+                    subprocess.run(["open", pdf_path])
+                else:  # Linux or others
+                    subprocess.run(["xdg-open", pdf_path])
+
+                # Refresh ticket table after successful payment
+                self.refresh_tickets()
+
+            except Exception as e:
+                print(f"[ERROR] Failed to generate or open receipt: {e}")
+
+        else:
+            print(f"[ERROR] Payment failed: {result.get('message') if result else 'No result returned'}")
 
     def next_page(self):
         """Go to the next page of tickets."""
