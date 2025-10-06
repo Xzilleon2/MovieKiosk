@@ -49,7 +49,8 @@ class SalesPage(ctk.CTkFrame):
         logoutBtn = ctk.CTkButton(sidebar, text="Logout",
                                   font=("Book Antiqua", 12),
                                   fg_color="#3E5F44", text_color="#E8FFD7",
-                                  hover_color="#5E936C", corner_radius=6)
+                                  hover_color="#5E936C", corner_radius=6,
+                                  command= lambda: controller.show_frame("HomePage"))
         logoutBtn.grid(row=6, column=0, sticky="sew", padx=15, pady=(10, 20), ipady=8)
 
         # ================= Main Content ================= #

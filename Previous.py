@@ -4,9 +4,9 @@ from Modals.Admin import admin_login_modal
 from PIL import Image
 from Classes.MoviesView_Class import MoviesView
 
-class SoonPage(ctk.CTkFrame):
+class PreviousPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
-        super().__init__(parent, fg_color="#E8FFD7")  # Light green background
+        super().__init__(parent, fg_color="#E8FFD7")
         self.controller = controller
 
         # Configure parent grid
@@ -59,9 +59,9 @@ class SoonPage(ctk.CTkFrame):
         # Menu Buttons (with radius 10)
         self.menu_buttons = {}
         menus = [
-            ("Soon", "#93DA97", lambda: handle_navigation(self,"Soon")),
+            ("Soon", "#E8FFD7", lambda: handle_navigation(self,"Soon")),
             ("Current", "#E8FFD7", lambda: handle_navigation(self,"Current")),
-            ("Previous", "#E8FFD7", lambda: handle_navigation(self,"Previous"))
+            ("Previous", "#93DA97", lambda: handle_navigation(self,"Previous"))
         ]
         for idx, (label, bgc, com) in enumerate(menus, start=1):
             btn = ctk.CTkButton(

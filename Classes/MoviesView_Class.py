@@ -4,54 +4,38 @@ class MoviesView:
     def __init__(self):
         self.controller = MoviesCntrl()
 
+    def __format_movies(self, movies):
+        """Convert raw movie dicts into formatted dicts."""
+        return [
+            {
+                "id": movie["movie_id"],
+                "title": movie["title"],
+                "genre": movie["genre"],
+                "price": float(movie["price"]) if movie["price"] is not None else 0.0,
+                "duration": int(movie["duration"]) if movie["duration"] is not None else 0,
+                "date": movie["release_date"].strftime("%B %d, %Y"),
+                "rating": movie["rating"],
+                "description": movie["description"],
+                "poster": movie["poster_path"],
+                "status": movie["status"]
+            }
+            for movie in movies
+        ]
+
     def __get_movies_this_month(self, limit=None):
         """Fetch movies with showtimes for the current month."""
         movies = self.controller.model._get_movies_this_month(limit)
-        return [
-            {
-                "id": movie["movie_id"],
-                "title": movie["title"],
-                "genre": movie["genre"],
-                "price": float(movie["price"]) if movie["price"] is not None else 0.0,
-                "duration": int(movie["duration"]) if movie["duration"] is not None else 0,
-                "date": movie["release_date"].strftime("%B %d, %Y"),
-                "rating": movie["rating"],
-                "description": movie["description"],
-                "poster": movie["poster_path"],
-                "status": movie["status"]
-            }
-            for movie in movies
-        ]
+        return self.__format_movies(movies)
 
     def __get_movies_next_month(self, limit=None):
-        """Fetch movies with showtimes for the current month."""
+        """Fetch movies with showtimes for the next month."""
         movies = self.controller.model._get_movies_next_month(limit)
-        return [
-            {
-                "id": movie["movie_id"],
-                "title": movie["title"],
-                "genre": movie["genre"],
-                "price": float(movie["price"]) if movie["price"] is not None else 0.0,
-                "duration": int(movie["duration"]) if movie["duration"] is not None else 0,
-                "date": movie["release_date"].strftime("%B %d, %Y"),
-                "rating": movie["rating"],
-                "description": movie["description"],
-                "poster": movie["poster_path"],
-                "status": movie["status"]
-            }
-            for movie in movies
-        ]
+        return self.__format_movies(movies)
 
     def getMoviesThisMonth(self):
-        """
-        Fetch available movies with showtimes in the current month (limit 4).
-        Returns a list of dictionaries.
-        """
+        """Fetch available movies with showtimes in the current month (limit 4)."""
         return self.__get_movies_this_month(limit=4)
 
     def getMoviesNextMonth(self):
-        """
-        Fetch available movies with showtimes in the current month (limit 4).
-        Returns a list of dictionaries.
-        """
+        """Fetch available movies with showtimes in the next month (limit 4)."""
         return self.__get_movies_next_month(limit=4)

@@ -1,7 +1,7 @@
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 from Includes.Dbh import Dbh
 from datetime import datetime, timedelta
-import random
-import string
 
 class Movies(Dbh):
     def _get_movies_this_month(self, limit=None):
@@ -46,32 +46,59 @@ class Movies(Dbh):
         if not conn:
             print("Error connecting to database!...Parent Error(Movies)")
             return []
+
         try:
             cursor = conn.cursor(dictionary=True)
-            current_date = datetime.now().date()
-            # Start of next month
-            start_date = (current_date.replace(day=1) + timedelta(days=31)).replace(day=1)
-            # End of next month
-            end_date = (start_date + timedelta(days=31)).replace(day=1) - timedelta(days=1)
+
+            today = datetime.now().date()
+            # Determine next month and year
+            if today.month == 12:
+                next_month = 1
+                year = today.year + 1
+            else:
+                next_month = today.month + 1
+                year = today.year
+
+            current_date = datetime.now()
+            # First day of next month
+            start_date = current_date.replace(day=1) + relativedelta(months=1)
+            # First day of the month after next
+            end_date = start_date + relativedelta(months=1)
+
             query = """
-            SELECT m.movie_id, m.title, m.genre, m.price, m.duration, m.release_date, 
-                   m.rating, m.description, m.poster_path, m.status
-            FROM Movies m
-            JOIN Showtimes s ON m.movie_id = s.movie_id
-            WHERE s.start_time >= %s AND s.start_time < %s
-            GROUP BY m.movie_id
-            """
+                    SELECT m.movie_id, \
+                           m.title, \
+                           m.genre, \
+                           m.price, \
+                           m.duration, \
+                           m.release_date,
+                           m.rating, \
+                           m.description, \
+                           m.poster_path, \
+                           m.status
+                    FROM Movies m
+                             JOIN Showtimes s ON m.movie_id = s.movie_id
+                    WHERE s.start_time >= %s AND s.start_time < %s \
+                    GROUP BY m.movie_id \
+                    """
+
+            values = (start_date, end_date)
+
             if limit:
                 query += " LIMIT %s"
-                cursor.execute(query, (start_date, end_date, limit))
-            else:
-                cursor.execute(query, (start_date, end_date))
+                values = values + (limit,)
+
+            cursor.execute(query, values)
             movies = cursor.fetchall()
+
+            # Ensure proper data types
             for movie in movies:
                 movie['price'] = float(movie['price']) if movie['price'] is not None else 0.0
                 movie['duration'] = int(movie['duration']) if movie['duration'] is not None else 0
-            print(f"Retrieved {len(movies)} movies for {start_date} to {end_date}")
+
+            print(f"Retrieved {len(movies)} movies for {start_date.date()} to {end_date.date()}")
             return movies
+
         except Exception as e:
             print(f"Error fetching movies for next month: {e}")
             return []
