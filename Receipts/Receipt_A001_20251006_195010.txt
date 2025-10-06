@@ -1,0 +1,26 @@
+============================================
+                       Payment Receipt
+        ============================================
+
+        Movie: Jurasic Park 3
+        Date: October 06, 2025
+        Time: 07:50 PM
+
+        Cinema: Gate 3
+        Seat: A5
+
+        Transaction Code: A001
+
+        --------------------------------------------
+        Amount:         ₱450.00
+        Customer Cash:  ₱1000.00
+        Change:         ₱550.00
+        --------------------------------------------
+
+        Thank you for choosing our cinema!
+        Enjoy your movie 🎬
+        ============================================
+
+        Stub:
+        Jurasic Park 3 | Gate 3 | A5
+        --------------------------------------------

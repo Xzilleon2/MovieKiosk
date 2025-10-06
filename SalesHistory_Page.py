@@ -1,9 +1,12 @@
 import customtkinter as ctk
 from Classes.TicketView_Class import TicketView
+from datetime import datetime
+
 
 class SalesHistoryPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         super().__init__(parent, fg_color="#E8FFD7")
+        self.controller = controller  # Store controller for frame switching
 
         # Main layout
         self.columnconfigure(0, weight=1)
@@ -59,11 +62,11 @@ class SalesHistoryPage(ctk.CTkFrame):
         # ---- Table card ---- #
         tableCard = ctk.CTkFrame(mainFrame, fg_color="#93DA97", corner_radius=12)
         tableCard.grid(row=1, column=0, sticky="nsew", padx=20, pady=(0, 10))
-        tableCard.columnconfigure(tuple(range(7)), weight=1)
+        tableCard.columnconfigure(tuple(range(8)), weight=1)
 
         # Top bar inside table card
         cardTop = ctk.CTkFrame(tableCard, fg_color="#93DA97")
-        cardTop.grid(row=0, column=0, columnspan=10, sticky="ew", padx=10, pady=(30, 5))
+        cardTop.grid(row=0, column=0, columnspan=8, sticky="ew", padx=10, pady=(30, 5))
         cardTop.columnconfigure(0, weight=1)
         cardTop.columnconfigure(1, weight=0)
 
@@ -74,8 +77,7 @@ class SalesHistoryPage(ctk.CTkFrame):
         self.search_entry.bind("<KeyRelease>", self.handle_search)
 
         # Table headers
-        # Table headers
-        headers = ["ID", "Code", "Seat", "Gate", "Date", "Time", "Total Payment"]
+        headers = ["ID", "Code", "Movie Title", "Seat", "Gate", "Date", "Time", "Total Payment"]
         self.headers = headers
         for i, h in enumerate(headers):
             lbl = ctk.CTkLabel(tableCard,
@@ -89,7 +91,7 @@ class SalesHistoryPage(ctk.CTkFrame):
         self.page_size = 10
         self.current_page = 0
         self.tableCard = tableCard
-        self.all_payments = TicketView().get_payments()  # fetch payments
+        self.all_payments = TicketView().get_payments() or []
         self.filtered_payments = self.all_payments
         self.render_page()
 
@@ -121,6 +123,11 @@ class SalesHistoryPage(ctk.CTkFrame):
         )
         nextBtn.pack(side="right", padx=20)
 
+    def tkraise(self, *args, **kwargs):
+        """Override tkraise to refresh payments when frame is shown."""
+        super().tkraise(*args, **kwargs)
+        self.refresh_payments()
+
     # ================= Helper Methods ================= #
     def handle_search(self, event=None):
         """Handle search input and filter payments."""
@@ -128,7 +135,10 @@ class SalesHistoryPage(ctk.CTkFrame):
         if query:
             self.filtered_payments = [
                 p for p in self.all_payments
-                if query in str(p["ticket_id"]).lower() or query in str(p["seat"]).lower()
+                if query in str(p["payment_id"]).lower() or
+                   query in str(p["code"]).lower() or
+                   query in str(p["movie_title"]).lower() or
+                   query in str(p["seat"]).lower()
             ]
         else:
             self.filtered_payments = self.all_payments
@@ -154,21 +164,22 @@ class SalesHistoryPage(ctk.CTkFrame):
         for r, payment in enumerate(self.rows[start:end], start=2):
             for c, header in enumerate(self.headers):
                 if header == "Total Payment":
+                    total_payment = float(payment["total_payment"]) if isinstance(payment["total_payment"], (int, float)) else 0.0
                     lbl = ctk.CTkLabel(
                         self.tableCard,
-                        text=f"₱{float(payment['total_payment']):.2f}",
+                        text=f"₱{total_payment:.2f}",
                         font=("Book Antiqua", 12), text_color="#3E5F44"
                     )
                     lbl.grid(row=r, column=c, sticky="nsew", padx=10, ipady=10)
 
                 elif header == "Date":
-                    date_text = payment["payment_date"].strftime("%Y-%m-%d")
+                    date_text = payment["payment_date"].strftime("%b %d, %Y") if isinstance(payment["payment_date"], datetime) else str(payment["payment_date"])
                     lbl = ctk.CTkLabel(self.tableCard, text=date_text,
                                        font=("Book Antiqua", 12), text_color="#3E5F44")
                     lbl.grid(row=r, column=c, sticky="nsew", padx=10, ipady=10)
 
                 elif header == "Time":
-                    time_text = payment["payment_date"].strftime("%H:%M:%S")
+                    time_text = payment["payment_date"].strftime("%I:%M %p") if isinstance(payment["payment_date"], datetime) else str(payment["payment_date"])
                     lbl = ctk.CTkLabel(self.tableCard, text=time_text,
                                        font=("Book Antiqua", 12), text_color="#3E5F44")
                     lbl.grid(row=r, column=c, sticky="nsew", padx=10, ipady=10)
@@ -178,31 +189,36 @@ class SalesHistoryPage(ctk.CTkFrame):
                     key_map = {
                         "ID": "payment_id",
                         "Code": "code",
+                        "Movie Title": "movie_title",
                         "Seat": "seat",
                         "Gate": "gate"
                     }
                     key = key_map.get(header, header.lower().replace(" ", "_"))
-                    lbl = ctk.CTkLabel(self.tableCard, text=payment.get(key, ""),
+                    lbl = ctk.CTkLabel(self.tableCard, text=str(payment.get(key, "")),
                                        font=("Book Antiqua", 12), text_color="#3E5F44")
                     lbl.grid(row=r, column=c, sticky="nsew", padx=10, ipady=10)
 
     def next_page(self):
+        """Go to the next page of payments."""
         if (self.current_page + 1) * self.page_size < len(self.rows):
             self.current_page += 1
             self.render_page()
 
     def prev_page(self):
+        """Go to the previous page of payments."""
         if self.current_page > 0:
             self.current_page -= 1
             self.render_page()
 
     def refresh_payments(self):
+        """Refresh payment data from TicketView."""
         try:
             self.all_payments = TicketView().get_payments() or []
             self.filtered_payments = self.all_payments
             self.current_page = 0
             self.render_page()
         except Exception as e:
+            print(f"[ERROR] Failed to refresh payments: {e}")
             lbl = ctk.CTkLabel(self.tableCard, text=f"Error loading payments: {str(e)}",
                                font=("Book Antiqua", 12), text_color="#ef4444")
             lbl.grid(row=2, column=0, columnspan=len(self.headers), pady=20)

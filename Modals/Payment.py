@@ -26,7 +26,7 @@ def payment_modal(parent, ticket, pay_callback=None):
     parent_y = parent.winfo_rooty()
     parent_w = parent.winfo_width()
     parent_h = parent.winfo_height()
-    x = parent_x + (parent_w // 2) - (w // 2)
+    x = parent_x + (parent_w // 2) - (w // 2) -50
     y = parent_y + (parent_h // 2) - (h // 2)
     modal.geometry(f"{w}x{h}+{x}+{y}")
     modal.attributes('-topmost', True)
