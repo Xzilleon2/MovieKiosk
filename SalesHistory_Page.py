@@ -1,9 +1,5 @@
 import customtkinter as ctk
-from Modals.Register import register_modal
-from Classes.MoviesView_Class import MoviesView
-from Modals.Delete import delete_modal
-from Modals.Update import update_modal
-
+from Classes.TicketView_Class import TicketView
 
 class SalesHistoryPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
@@ -70,16 +66,16 @@ class SalesHistoryPage(ctk.CTkFrame):
         cardTop.grid(row=0, column=0, columnspan=10, sticky="ew", padx=10, pady=(30, 5))
         cardTop.columnconfigure(0, weight=1)
         cardTop.columnconfigure(1, weight=0)
-        cardTop.columnconfigure(2, weight=0)
 
         self.search_entry = ctk.CTkEntry(cardTop, placeholder_text="Search...",
                                          font=("Book Antiqua", 12), width=250,
                                          height=30, fg_color="#E8FFD7", text_color="#3E5F44")
         self.search_entry.grid(row=0, column=1, sticky="e", padx=10)
-        self.search_entry.bind("<KeyRelease>", self.handle_search)  # Bind search event
+        self.search_entry.bind("<KeyRelease>", self.handle_search)
 
         # Table headers
-        headers = ["ID", "Movie", "Genre", "Price", "Duration", "Rating", "Status"]
+        # Table headers
+        headers = ["ID", "Code", "Seat", "Gate", "Date", "Time", "Total Payment"]
         self.headers = headers
         for i, h in enumerate(headers):
             lbl = ctk.CTkLabel(tableCard,
@@ -93,8 +89,8 @@ class SalesHistoryPage(ctk.CTkFrame):
         self.page_size = 10
         self.current_page = 0
         self.tableCard = tableCard
-        self.all_movies = MoviesView().getMoviesThisMonth()  # Fetch movies once during init
-        self.filtered_movies = self.all_movies  # Initialize with all movies
+        self.all_payments = TicketView().get_payments()  # fetch payments
+        self.filtered_payments = self.all_payments
         self.render_page()
 
         # ---- Pagination controls ---- #
@@ -126,51 +122,28 @@ class SalesHistoryPage(ctk.CTkFrame):
         nextBtn.pack(side="right", padx=20)
 
     # ================= Helper Methods ================= #
-    def status_badge(self, parent, text):
-        color_map = {
-            "Active": "#22c55e",
-            "Inactive": "#ef4444",
-            "Pending": "#f59e0b",
-        }
-        return ctk.CTkLabel(
-            parent,
-            text=text,
-            font=("Book Antiqua", 13, "bold"),
-            text_color="#E8FFD7",
-            fg_color=color_map.get(text, "#6b7280"),
-            corner_radius=8,
-            padx=10,
-            pady=4
-        )
-
     def handle_search(self, event=None):
-        """Handle search input and filter movies."""
+        """Handle search input and filter payments."""
         query = self.search_entry.get().strip().lower()
         if query:
-            # Filter movies based on title or genre
-            self.filtered_movies = [
-                movie for movie in self.all_movies
-                if query in movie["title"].lower() or query in movie["genre"].lower()
+            self.filtered_payments = [
+                p for p in self.all_payments
+                if query in str(p["ticket_id"]).lower() or query in str(p["seat"]).lower()
             ]
         else:
-            # If search is empty, show all movies
-            self.filtered_movies = self.all_movies
-
-        self.current_page = 0  # Reset to first page on search
+            self.filtered_payments = self.all_payments
+        self.current_page = 0
         self.render_page()
 
     def render_page(self):
-        """Render the current page of movies (filtered or all)."""
-        # Clear old rows
+        """Render the current page of payments."""
         for widget in self.tableCard.winfo_children()[len(self.headers) + 1:]:
             widget.destroy()
 
-        # Use filtered movies if available, else use all movies
-        self.rows = self.filtered_movies if self.filtered_movies else None
+        self.rows = self.filtered_payments if self.filtered_payments else None
 
-        # Display message if no movies are found
         if not self.rows:
-            lbl = ctk.CTkLabel(self.tableCard, text="No movies found",
+            lbl = ctk.CTkLabel(self.tableCard, text="No payments found",
                                font=("Book Antiqua", 12), text_color="#3E5F44")
             lbl.grid(row=2, column=0, columnspan=len(self.headers), pady=20)
             return
@@ -178,59 +151,58 @@ class SalesHistoryPage(ctk.CTkFrame):
         start = self.current_page * self.page_size
         end = start + self.page_size
 
-        for r, movie in enumerate(self.rows[start:end], start=2):
+        for r, payment in enumerate(self.rows[start:end], start=2):
             for c, header in enumerate(self.headers):
-                if header == "Status":
-                    badge = self.status_badge(self.tableCard, movie["status"])
-                    badge.grid(row=r, column=c, sticky="nsew", padx=10, pady=8)
+                if header == "Total Payment":
+                    lbl = ctk.CTkLabel(
+                        self.tableCard,
+                        text=f"₱{float(payment['total_payment']):.2f}",
+                        font=("Book Antiqua", 12), text_color="#3E5F44"
+                    )
+                    lbl.grid(row=r, column=c, sticky="nsew", padx=10, ipady=10)
 
-                elif header == "Price":
-                    price_text = f"₱{movie['price']:.2f}" if isinstance(movie['price'],
-                                                                        (int, float)) else "Invalid Price"
-                    lbl = ctk.CTkLabel(self.tableCard, text=price_text,
+                elif header == "Date":
+                    date_text = payment["payment_date"].strftime("%Y-%m-%d")
+                    lbl = ctk.CTkLabel(self.tableCard, text=date_text,
                                        font=("Book Antiqua", 12), text_color="#3E5F44")
                     lbl.grid(row=r, column=c, sticky="nsew", padx=10, ipady=10)
 
-                elif header == "Duration":
-                    duration_text = f"{movie['duration']} mins" if isinstance(movie['duration'],
-                                                                              int) else "Invalid Duration"
-                    lbl = ctk.CTkLabel(self.tableCard, text=duration_text,
-                                       font=("Book Antiqua", 12), text_color="#3E5F44")
-                    lbl.grid(row=r, column=c, sticky="nsew", padx=10, ipady=10)
-
-                elif header == "Rating":
-                    lbl = ctk.CTkLabel(self.tableCard, text=movie["rating"],
+                elif header == "Time":
+                    time_text = payment["payment_date"].strftime("%H:%M:%S")
+                    lbl = ctk.CTkLabel(self.tableCard, text=time_text,
                                        font=("Book Antiqua", 12), text_color="#3E5F44")
                     lbl.grid(row=r, column=c, sticky="nsew", padx=10, ipady=10)
 
                 else:
-                    # default mapping: ID, Movie, Genre
-                    key = header.lower()
-                    if key == "movie":
-                        key = "title"
-                    lbl = ctk.CTkLabel(self.tableCard, text=movie[key],
+                    # Map header to dict key
+                    key_map = {
+                        "ID": "payment_id",
+                        "Code": "code",
+                        "Seat": "seat",
+                        "Gate": "gate"
+                    }
+                    key = key_map.get(header, header.lower().replace(" ", "_"))
+                    lbl = ctk.CTkLabel(self.tableCard, text=payment.get(key, ""),
                                        font=("Book Antiqua", 12), text_color="#3E5F44")
                     lbl.grid(row=r, column=c, sticky="nsew", padx=10, ipady=10)
 
     def next_page(self):
-        """Go to the next page of movies."""
         if (self.current_page + 1) * self.page_size < len(self.rows):
             self.current_page += 1
             self.render_page()
 
     def prev_page(self):
-        """Go to the previous page of movies."""
         if self.current_page > 0:
             self.current_page -= 1
             self.render_page()
 
-    def refresh_movies(self):
+    def refresh_payments(self):
         try:
-            self.all_movies = MoviesView().getMoviesThisMonth() or []
-            self.filtered_movies = self.all_movies
+            self.all_payments = TicketView().get_payments() or []
+            self.filtered_payments = self.all_payments
             self.current_page = 0
             self.render_page()
         except Exception as e:
-            lbl = ctk.CTkLabel(self.tableCard, text=f"Error loading movies: {str(e)}",
+            lbl = ctk.CTkLabel(self.tableCard, text=f"Error loading payments: {str(e)}",
                                font=("Book Antiqua", 12), text_color="#ef4444")
             lbl.grid(row=2, column=0, columnspan=len(self.headers), pady=20)

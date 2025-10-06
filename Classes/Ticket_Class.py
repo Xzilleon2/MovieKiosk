@@ -118,7 +118,54 @@ class Ticket(Dbh):
             print(f"[ERROR] Failed to cancel ticket {ticket_id}: {e}")
             return False
 
-    def insert_payment(self, data):
+    def _view_payments(self):
+        """
+        Returns a list of payments with:
+        payment_id, ticket_id, code, seat, gate, show_date, show_time, total_payment, method
+        """
+        db = self._connection()
+        cursor = db.cursor(dictionary=True)
+
+        sql = """
+              SELECT p.payment_id, \
+                     t.ticket_id, \
+                     t.code, \
+                     t.seat, \
+                     t.gate, DATE (s.start_time) AS show_date, TIME (s.start_time) AS show_time, p.money AS total_payment, p.change, p.method, p.payment_date
+              FROM payments p
+                  JOIN tickets t \
+              ON p.ticket_id = t.ticket_id
+                  JOIN showtimes s ON t.showtime_id = s.showtime_id
+              ORDER BY p.payment_id\
+              """
+
+        try:
+            cursor.execute(sql)
+            payments = cursor.fetchall()
+            print(f"{cursor.rowcount} payment records successfully retrieved.")
+
+            # Ensure correct formatting
+            for pay in payments:
+                pay['total_payment'] = float(pay['total_payment'] or 0)
+                pay['change'] = float(pay['change'] or 0)
+                pay['seat'] = str(pay['seat'])
+                pay['gate'] = str(pay['gate'])
+                if isinstance(pay['show_date'], datetime):
+                    pay['show_date'] = pay['show_date'].strftime("%Y-%m-%d")
+                if isinstance(pay['show_time'], datetime):
+                    pay['show_time'] = pay['show_time'].strftime("%H:%M:%S")
+
+            return payments
+
+        except Exception as e:
+            print("Error viewing payments:", e)
+            return []
+
+        finally:
+            cursor.close()
+            db.close()
+
+    def _insert_payment(self, data):
         conn = self._connection()
         try:
             print(f"[DEBUG] insert_payment() called with: {data}")

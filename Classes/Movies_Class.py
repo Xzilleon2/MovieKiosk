@@ -149,7 +149,7 @@ class Movies(Dbh):
             cursor.close()
             conn.close()
 
-    def _UpdateMovie(self, title, genre, price, duration, rating, description, poster_path, status, movie_id):
+    def _UpdateMovie(self, movie_id, title, genre, price, duration, rating, description, poster_path, status,):
         """Update a movie in the Movies table."""
         if not all([title, genre, isinstance(price, (int, float)), isinstance(duration, (int, float)), rating, status, description, poster_path]):
             print("Error: Missing or invalid required fields for movie update")

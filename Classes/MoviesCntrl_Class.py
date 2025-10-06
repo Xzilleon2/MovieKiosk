@@ -18,7 +18,7 @@ class MoviesCntrl:
 
     def AddMovie(self):
         """Validate and add a movie, scheduling it for a month with 4 specific time slots."""
-        ok, errors = self.__checkErrors()
+        ok, errors = self.checkErrors()
         if not ok:
             print("Validation failed:", errors)
             return False, errors
@@ -79,7 +79,7 @@ class MoviesCntrl:
 
     def UpdateMovie(self):
         """Update an existing movie."""
-        ok, errors = self.__checkErrors()
+        ok, errors = self.checkErrors()
         if not ok:
             print("Validation failed:", errors)
             return False
@@ -115,7 +115,7 @@ class MoviesCntrl:
         """Book a seat for a showtime."""
         return self.model.book_seat(showtime_id, seat)
 
-    def __checkErrors(self):
+    def checkErrors(self):
         """Validate movie input data."""
         errors = {}
         if not self.title:

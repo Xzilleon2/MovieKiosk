@@ -85,7 +85,7 @@ class TicketCntrl(Ticket):
         print(f"[DEBUG] process_payment() started with: {payment_data}")
         try:
             ticket = Ticket()
-            success = ticket.insert_payment(payment_data)
+            success = ticket._insert_payment(payment_data)
             print(f"[DEBUG] insert_payment() returned: {success}")
             return {"success": success, "message": "Inserted successfully" if success else "Insert failed"}
         except Exception as e:

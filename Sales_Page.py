@@ -11,6 +11,7 @@ import os, platform, subprocess
 class SalesPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         super().__init__(parent, fg_color="#E8FFD7")
+        self.controller = controller  # Store controller for frame switching
 
         # Main layout
         self.columnconfigure(0, weight=1)
@@ -81,7 +82,7 @@ class SalesPage(ctk.CTkFrame):
         self.search_entry.bind("<KeyRelease>", self.handle_search)  # Bind search event
 
         # Table headers
-        headers = ["ID", "Code", "Movie Title", "Seat", "Showtime", "Gate", "Price", "Action"]
+        headers = ["ID", "Code", "Movie Title", "Seat", "Showtime", "Status", "Price", "Action"]
         self.headers = headers
         for i, h in enumerate(headers):
             lbl = ctk.CTkLabel(tableCard,
@@ -127,7 +128,30 @@ class SalesPage(ctk.CTkFrame):
         )
         nextBtn.pack(side="right", padx=20)
 
+    def tkraise(self, *args, **kwargs):
+        """Override tkraise to refresh tickets when frame is shown."""
+        super().tkraise(*args, **kwargs)
+        self.refresh_tickets()
+
     # ================= Helper Methods ================= #
+    def status_badge(self, parent, text):
+        color_map = {
+            "Active": "#22c55e",
+            "Inactive": "#ef4444",
+            "Pending": "#f59e0b",
+            "Booked": "#22c55e"
+        }
+        return ctk.CTkLabel(
+            parent,
+            text=text,
+            font=("Book Antiqua", 13, "bold"),
+            text_color="#E8FFD7",
+            fg_color=color_map.get(text, "#6b7280"),
+            corner_radius=8,
+            padx=10,
+            pady=4
+        )
+
     def handle_search(self, event=None):
         """Handle search input and filter tickets."""
         query = self.search_entry.get().strip().lower()
@@ -173,14 +197,18 @@ class SalesPage(ctk.CTkFrame):
 
                 elif header == "Showtime":
                     try:
-                        # Format showtime (e.g., "2025-10-05 10:00:00" to "Oct 05, 2025 10:00 AM")
+                        # Format showtime (e.g., "2025-10-06 14:00:00" to "Oct 06, 2025 02:00 PM")
                         showtime = datetime.strptime(ticket["showtime"], "%Y-%m-%d %H:%M:%S")
                         showtime_text = showtime.strftime("%b %d, %Y %I:%M %p")
                     except (ValueError, TypeError):
-                        showtime_text = ticket["showtime"] if ticket["showtime"] else "Invalid Showtime"
+                        showtime_text = ticket.get("showtime", "Invalid Showtime")
                     lbl = ctk.CTkLabel(self.tableCard, text=showtime_text,
                                        font=("Book Antiqua", 12), text_color="#3E5F44")
                     lbl.grid(row=r, column=c, sticky="nsew", padx=10, ipady=10)
+
+                elif header == "Status":
+                    badge = self.status_badge(self.tableCard, ticket["status"])
+                    badge.grid(row=r, column=c, sticky="nsew", padx=10, pady=8)
 
                 elif header == "Action":
                     action_frame = ctk.CTkFrame(self.tableCard, fg_color="#93DA97")
@@ -204,7 +232,7 @@ class SalesPage(ctk.CTkFrame):
                     upd_btn.grid(row=0, column=1, padx=2, sticky="nsew")
 
                 else:
-                    # Default mapping: ID, Movie Title, Seat, Gate
+                    # Default mapping: ID, Code, Movie Title, Seat
                     key = header.lower().replace(" ", "_")
                     if header == "ID":
                         key = "ticket_id"
@@ -323,4 +351,3 @@ class SalesPage(ctk.CTkFrame):
             lbl = ctk.CTkLabel(self.tableCard, text=f"Error loading tickets: {str(e)}",
                                font=("Book Antiqua", 12), text_color="#ef4444")
             lbl.grid(row=2, column=0, columnspan=len(self.headers), pady=20)
-    
