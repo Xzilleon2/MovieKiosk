@@ -17,6 +17,7 @@ class MovieKiosk(ctk.CTk):
         self.bind("<Escape>", lambda e: self.destroy())  # Exit with ESC
         self.transaction_code = None
         self.transactions = {}
+        self.tickets_to_insert = {}
 
         # Main container (fills whole screen)
         self.container = ctk.CTkFrame(self, fg_color="black")

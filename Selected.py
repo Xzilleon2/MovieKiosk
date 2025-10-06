@@ -4,6 +4,7 @@ from PIL import Image, ImageTk
 from tkinter import messagebox
 from datetime import datetime
 from Classes.MoviesCntrl_Class import MoviesCntrl
+from Classes.TicketCntrl_Class import TicketCntrl
 
 
 class SelectedScreen(ctk.CTkFrame):
@@ -266,12 +267,30 @@ class SelectedScreen(ctk.CTkFrame):
             messagebox.showerror("Error", "Please select Time, Seat, and Gate before continuing.")
             return
 
+        # Display data in modal
         transaction_code = self.controller.transaction_code
         self.controller.transactions.setdefault(transaction_code, [])
         self.controller.transactions[transaction_code].append({
             "title": title, "rating": rating, "seat": seat, "time": time,
             "gate": gate, "date": date, "price": price
         })
+
+        # Pass data to controller
+        # =========================
+        ticket_list = getattr(self.controller, 'tickets_to_insert', {})
+        ticket_list.setdefault(transaction_code, [])
+        ticket_list[transaction_code].append({
+            "CODE": transaction_code,
+            "movie_id": self.movie_data.get("id"),
+            "showtime_id": self.selected["showtime_id"],
+            "seat_id": seat,
+            "gate": self.selected["gate"],
+            "price": price,
+        })
+
+        # Save back to controller so it's accessible
+        self.controller.tickets_to_insert = ticket_list
+        TicketCntrl().insert_ticket_data(ticket_list, transaction_code)
 
         self.orderFrame.grid()
         for widget in self.orderFrame.winfo_children():

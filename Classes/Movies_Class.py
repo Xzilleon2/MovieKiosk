@@ -1,5 +1,7 @@
 from Includes.Dbh import Dbh
 from datetime import datetime, timedelta
+import random
+import string
 
 class Movies(Dbh):
     def _get_movies_this_month(self, limit=None):
@@ -440,3 +442,6 @@ class Movies(Dbh):
         finally:
             cursor.close()
             conn.close()
+
+    def _insert_ticket(self):
+        pass

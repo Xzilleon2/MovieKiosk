@@ -108,6 +108,9 @@ class MoviesCntrl:
         print(f"✅ Movie ID {movie_id} deleted successfully.")
         return True
 
+    def insert_ticket(self):
+        pass
+
     def book_seat(self, showtime_id, seat):
         """Book a seat for a showtime."""
         return self.model.book_seat(showtime_id, seat)
